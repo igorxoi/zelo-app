@@ -5,53 +5,53 @@ import {
   StyleSheet,
   TextInput,
   TextInputProps,
-  View,
+  View
 } from "react-native";
 
-import { Texto } from "@/components/Texto";
+import { Text } from "@/components/Text";
 import {
-  Espacamento,
-  FamiliaFonte,
-  Raio,
-  TamanhoFonte,
-} from "@/constants/tema";
-import { useTema } from "@/hooks/useTema";
+  FontFamily,
+  FontSize,
+  Radius,
+  Spacing
+} from "@/constants/theme";
+import { useTheme } from "@/hooks/useTheme";
 
 type Props = TextInputProps & {
-  rotulo: string;
+  label: string;
 };
 
-export function Input({ rotulo, secureTextEntry, style, ...rest }: Props) {
-  const cores = useTema();
+export function Input({ label, secureTextEntry, style, ...rest }: Props) {
+  const colors = useTheme();
 
-  const ehSenha = !!secureTextEntry;
-  const [oculta, setOculta] = useState(true);
+  const isPassword = !!secureTextEntry;
+  const [hidden, setHidden] = useState(true);
 
   return (
-    <View style={estilos.container}>
-      <Texto tamanho="p" peso="seminegrito" cor="texto">
-        {rotulo}
-      </Texto>
+    <View style={styles.container}>
+      <Text size="sm" weight="semibold" color="text">
+        {label}
+      </Text>
 
-      <View style={[estilos.campo, { borderColor: cores.borda }]}>
+      <View style={[styles.field, { borderColor: colors.border }]}>
         <TextInput
           {...rest}
-          secureTextEntry={ehSenha && oculta}
-          placeholderTextColor={cores.textoDica}
-          style={[estilos.entrada, { color: cores.texto }, style]}
+          secureTextEntry={isPassword && hidden}
+          placeholderTextColor={colors.placeholder}
+          style={[styles.input, { color: colors.text }, style]}
         />
 
-        {ehSenha && (
+        {isPassword && (
           <Pressable
-            onPress={() => setOculta((anterior) => !anterior)}
-            hitSlop={Espacamento.dois}
+            onPress={() => setHidden((prev) => !prev)}
+            hitSlop={Spacing.two}
             accessibilityRole="button"
-            accessibilityLabel={oculta ? "Mostrar senha" : "Ocultar senha"}
+            accessibilityLabel={hidden ? "Mostrar senha" : "Ocultar senha"}
           >
             <Feather
-              name={oculta ? "eye" : "eye-off"}
+              name={hidden ? "eye" : "eye-off"}
               size={20}
-              color={cores.textoSecundario}
+              color={colors.textSecondary}
             />
           </Pressable>
         )}
@@ -60,23 +60,23 @@ export function Input({ rotulo, secureTextEntry, style, ...rest }: Props) {
   );
 }
 
-const estilos = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
-    gap: Espacamento.dois,
+    gap: Spacing.two,
   },
-  campo: {
+  field: {
     flexDirection: "row",
     alignItems: "center",
     height: 48,
     borderWidth: 1,
-    borderRadius: Raio.medio,
-    paddingHorizontal: Espacamento.tres,
-    gap: Espacamento.dois,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.three,
+    gap: Spacing.two,
   },
-  entrada: {
+  input: {
     flex: 1,
     height: "100%",
-    fontFamily: FamiliaFonte.regular,
-    fontSize: TamanhoFonte.p,
+    fontFamily: FontFamily.regular,
+    fontSize: FontSize.sm,
   },
 });

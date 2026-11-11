@@ -1,0 +1,180 @@
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ScrollView, StyleSheet, View } from "react-native";
+
+import { DateSelector } from "@/components/DateSelector";
+import { EmptyState } from "@/components/EmptyState";
+import { HistoryEventDetailsSheet } from "@/components/HistoryEventDetailsSheet";
+import { Loading } from "@/components/Loading";
+import { MedicationFilter } from "@/components/MedicationFilter";
+import { PageHeader } from "@/components/PageHeader";
+import { Period, PeriodFilter } from "@/components/PeriodFilter";
+import { Timeline, TimelineEvent } from "@/components/Timeline";
+import { Spacing } from "@/constants/theme";
+import { usePatient } from "@/contexts/PatientContext";
+import { useTheme } from "@/hooks/useTheme";
+import { getHistory, type HistoryMedication } from "@/services/history";
+
+function getDaysOfMonth(month: number, year: number) {
+  const total = new Date(year, month + 1, 0).getDate();
+
+  return Array.from(
+    { length: total },
+    (_, index) => new Date(year, month, index + 1),
+  );
+}
+
+/**
+ * Histórico completo do paciente. Escolha o mês, o dia e, se quiser, um
+ * medicamento para filtrar. A linha do tempo mostra as doses (tomada, não
+ * tomada com o motivo) e os relatos de sintomas do paciente. Tocar em um
+ * registro abre os detalhes (somente leitura no MVP).
+ */
+export default function History() {
+  const { patientId } = usePatient();
+
+  const colors = useTheme();
+
+  const today = useMemo(() => new Date(), []);
+
+  const [selectedDate, setSelectedDate] = useState(today);
+
+  const [period, setPeriod] = useState<Period>({
+    month: today.getMonth(),
+    year: today.getFullYear(),
+  });
+
+  const [medication, setMedication] = useState<HistoryMedication | null>(null);
+
+  const [events, setEvents] = useState<TimelineEvent[]>([]);
+  const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(
+    null,
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const requestId = useRef(0);
+
+  const dates = useMemo(
+    () => getDaysOfMonth(period.month, period.year),
+    [period.month, period.year],
+  );
+
+  const reloadHistory = useCallback(async () => {
+    if (!patientId) return;
+
+    const currentRequest = ++requestId.current;
+    const isCurrent = () => currentRequest === requestId.current;
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const result = await getHistory({
+        patientId,
+        date: selectedDate,
+        medicationId: medication?.id,
+      });
+      if (isCurrent()) setEvents(result);
+    } catch {
+      if (isCurrent()) {
+        setEvents([]);
+        setErrorMessage("Não foi possível carregar o histórico.");
+      }
+    } finally {
+      if (isCurrent()) setIsLoading(false);
+    }
+  }, [patientId, selectedDate, medication]);
+
+  useEffect(() => {
+    reloadHistory();
+  }, [reloadHistory]);
+
+  useEffect(() => {
+    setMedication(null);
+  }, [patientId]);
+
+  const handleSelectPeriod = (next: Period) => {
+    setPeriod(next);
+
+    setMedication(null);
+
+    setSelectedDate(new Date(next.year, next.month, 1));
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setPeriod({ month: today.getMonth(), year: today.getFullYear() });
+        setSelectedDate(today);
+        setMedication(null);
+        setSelectedEvent(null);
+      };
+    }, [today]),
+  );
+
+  return (
+    <View style={[styles.screen, { backgroundColor: colors.primary }]}>
+      <PageHeader title="Histórico" />
+
+      <ScrollView
+        style={[styles.sheet, { backgroundColor: colors.background }]}
+        contentContainerStyle={styles.content}
+      >
+        <PeriodFilter value={period} onChange={handleSelectPeriod} />
+
+        <DateSelector
+          dates={dates}
+          value={selectedDate}
+          onChange={setSelectedDate}
+        />
+
+        <MedicationFilter
+          title="Histórico do paciente"
+          patientId={patientId}
+          period={period}
+          value={medication}
+          onChange={setMedication}
+        />
+
+        {errorMessage ? (
+          <EmptyState
+            icon="alert-circle"
+            title="Algo deu errado"
+            message={errorMessage}
+          />
+        ) : events.length === 0 && !isLoading ? (
+          <EmptyState
+            icon="calendar"
+            title="Nenhum registro neste dia"
+            message="Quando houver medicamentos ou relatos, eles aparecem aqui."
+          />
+        ) : (
+          <Timeline events={events} onEventPress={setSelectedEvent} />
+        )}
+      </ScrollView>
+
+      {selectedEvent && (
+        <HistoryEventDetailsSheet
+          event={selectedEvent}
+          onClose={() => setSelectedEvent(null)}
+        />
+      )}
+
+      {isLoading && <Loading fullScreen />}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+  },
+  sheet: {
+    flex: 1,
+  },
+  content: {
+    padding: Spacing.three,
+    gap: Spacing.four,
+  },
+});

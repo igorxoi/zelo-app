@@ -1,128 +1,113 @@
 import { Href, Redirect, router } from "expo-router";
 import { useState } from "react";
-import {
-  Image,
-  Pressable,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { CodeInput } from "@/components/CodeInput";
 import { Input } from "@/components/Input";
-import { InputCodigo } from "@/components/InputCodigo";
-import { Loader } from "@/components/Loader";
-import { SeletorSegmentado } from "@/components/SeletorSegmentado";
-import { Texto } from "@/components/Texto";
+import { Loading } from "@/components/Loading";
+import { Text } from "@/components/Text";
+import { ToggleGroup } from "@/components/ToggleGroup";
+import { Colors, Radius, Spacing } from "@/constants/theme";
+import { useAuth } from "@/contexts/AuthContext";
+import { type Profile, signInCaregiver, signInPatient } from "@/services/auth";
 
-import { Cores, Espacamento, Raio } from "@/constants/tema";
-import { useAutenticacao } from "@/contexts/AutenticacaoContext";
-import {
-  loginCuidador,
-  loginPaciente,
-  type Perfil,
-} from "@/services/autenticacao";
-
-const OPCOES_PERFIL = [
-  { rotulo: "Sou cuidador", valor: "cuidador" },
-  { rotulo: "Sou paciente", valor: "paciente" },
+const PROFILE_OPTIONS = [
+  { label: "Sou cuidador", value: "caregiver" },
+  { label: "Sou paciente", value: "patient" },
 ] as const;
 
-export default function TelaLogin() {
-  const { usuario, carregando, login } = useAutenticacao();
+export default function LoginScreen() {
+  const { user, loading, signIn } = useAuth();
 
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [perfil, setPerfil] = useState<Perfil>("cuidador");
-  const [codigo, setCodigo] = useState("");
-  const [enviando, setEnviando] = useState(false);
-  const [mensagemErro, setMensagemErro] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [profile, setProfile] = useState<Profile>("caregiver");
+  const [code, setCode] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleLogin = async (codigoCompleto?: string) => {
-    if (enviando) return;
+  const handleSignIn = async (completeCode?: string) => {
+    if (isSubmitting) return;
 
-    setEnviando(true);
-    setMensagemErro(null);
+    setIsSubmitting(true);
+    setErrorMessage(null);
 
     try {
-      const usuarioLogado =
-        perfil === "cuidador"
-          ? await loginCuidador({ email, senha })
-          : await loginPaciente(codigoCompleto ?? codigo);
+      const signedUser =
+        profile === "caregiver"
+          ? await signInCaregiver({ email, password })
+          : await signInPatient(completeCode ?? code);
 
-      await login(usuarioLogado);
+      await signIn(signedUser);
 
       router.replace(
-        (usuarioLogado.perfil === "cuidador"
-          ? "/cuidador"
-          : "/paciente") as Href,
+        (signedUser.profile === "caregiver"
+          ? "/caregiver"
+          : "/patient") as Href,
       );
-    } catch (erro) {
-      setMensagemErro(
-        erro instanceof Error ? erro.message : "Não foi possível login.",
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Não foi possível entrar.",
       );
     } finally {
-      setEnviando(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleEsqueciSenha = () => {
-    // TODO: navegar para o esqueci senha
+  const handleSignUp = () => {
+    router.push("/register" as Href);
   };
 
-  const handleCriarConta = () => {
-    // TODO: navegar para o cadastro
-  };
-
-  const handleMudarPerfil = (valor: Perfil) => {
-    setPerfil(valor);
+  const handleProfileChange = (value: Profile) => {
+    setProfile(value);
 
     setEmail("");
-    setSenha("");
-    setCodigo("");
-    setMensagemErro(null);
+    setPassword("");
+    setCode("");
+    setErrorMessage(null);
   };
 
-  if (carregando) {
+  if (loading) {
     return (
-      <View style={estilos.tela}>
-        <Loader telaCheia />
+      <View style={styles.screen}>
+        <Loading fullScreen />
       </View>
     );
   }
 
-  if (usuario) {
+  if (user) {
     return (
       <Redirect
         href={
-          (usuario.perfil === "cuidador" ? "/cuidador" : "/paciente") as Href
+          (user.profile === "caregiver" ? "/caregiver" : "/patient") as Href
         }
       />
     );
   }
 
   return (
-    <SafeAreaView style={estilos.areaSegura}>
-      <View style={estilos.cabecalho}>
-        <Image source={require("@/assets/logo.png")} style={estilos.logo} />
-        <Texto tamanho="gg" peso="seminegrito">
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <Image source={require("@/assets/logo.png")} style={styles.logo} />
+        <Text size="xl" weight="semibold">
           Bem-vindo a Zelo
-        </Texto>
-        <Texto tamanho="p" cor="textoSecundario" style={estilos.subtitulo}>
+        </Text>
+        <Text size="sm" color="textSecondary" style={styles.subtitle}>
           Entre para acompanhar o tratamento de quem você cuida.
-        </Texto>
+        </Text>
       </View>
 
-      <SeletorSegmentado
-        opcoes={OPCOES_PERFIL}
-        valor={perfil}
-        onChange={handleMudarPerfil}
+      <ToggleGroup
+        options={PROFILE_OPTIONS}
+        value={profile}
+        onChange={handleProfileChange}
       />
 
-      {perfil === "cuidador" ? (
-        <View style={estilos.formulario}>
+      {profile === "caregiver" ? (
+        <View style={styles.form}>
           <Input
-            rotulo="E-mail"
+            label="E-mail"
             placeholder="seu@email.com"
             value={email}
             onChangeText={setEmail}
@@ -131,114 +116,110 @@ export default function TelaLogin() {
           />
 
           <Input
-            rotulo="Senha"
+            label="Senha"
             placeholder="Digite sua senha"
-            value={senha}
-            onChangeText={setSenha}
+            value={password}
+            onChangeText={setPassword}
             secureTextEntry
           />
 
-          <Pressable onPress={handleEsqueciSenha} style={estilos.esqueci}>
-            <Texto tamanho="pp" peso="seminegrito" cor="primaria">
-              Esqueci minha senha
-            </Texto>
-          </Pressable>
+          {/*
+            "Esqueci minha senha" fica fora do MVP (exige envio de e-mail).
+            Quando entrar, volta aqui com um handler que abre a recuperação.
+          */}
         </View>
       ) : (
-        <InputCodigo
-          rotulo="Código do seu cuidador"
-          ajuda="São 6 números."
-          valor={codigo}
-          onChange={setCodigo}
-          onComplete={(codigoCompleto) => handleLogin(codigoCompleto)}
+        <CodeInput
+          label="Código do seu cuidador"
+          helper="São 6 números."
+          value={code}
+          onChange={setCode}
+          onComplete={(completeCode) => handleSignIn(completeCode)}
         />
       )}
 
-      {mensagemErro && (
-        <Texto
-          tamanho="pp"
-          cor="perigo"
+      {errorMessage && (
+        <Text
+          size="xs"
+          color="danger"
           accessibilityRole="alert"
-          style={estilos.erro}
+          style={styles.error}
         >
-          {mensagemErro}
-        </Texto>
+          {errorMessage}
+        </Text>
       )}
 
       <TouchableOpacity
-        style={estilos.botao}
-        onPress={() => handleLogin()}
-        disabled={enviando}
+        style={styles.button}
+        onPress={() => handleSignIn()}
+        disabled={isSubmitting}
         activeOpacity={0.8}
         accessibilityRole="button"
       >
-        <Texto peso="seminegrito" cor="sobrePrimaria" tamanho="p">
+        <Text weight="semibold" color="onPrimary" size="sm">
           Entrar
-        </Texto>
+        </Text>
       </TouchableOpacity>
 
-      <Texto tamanho="pp" cor="textoSecundario" style={estilos.rodape}>
-        {perfil === "cuidador" ? (
+      <Text size="xs" color="textSecondary" style={styles.footer}>
+        {profile === "caregiver" ? (
           <>
             Não tem uma conta?{" "}
-            <Texto
-              tamanho="pp"
-              peso="seminegrito"
-              cor="primaria"
-              onPress={handleCriarConta}
+            <Text
+              size="xs"
+              weight="semibold"
+              color="primary"
+              onPress={handleSignUp}
             >
               Criar conta
-            </Texto>
+            </Text>
           </>
         ) : (
           "Não tem o código? Peça para quem cuida de você."
         )}
-      </Texto>
+      </Text>
 
-      {enviando && <Loader telaCheia />}
+      {isSubmitting && <Loading fullScreen />}
     </SafeAreaView>
   );
 }
 
-const estilos = StyleSheet.create({
-  tela: {
+const styles = StyleSheet.create({
+  screen: {
     flex: 1,
   },
-  areaSegura: {
+  safeArea: {
     flex: 1,
-    padding: Espacamento.quatro,
-    gap: Espacamento.tres,
+    padding: Spacing.four,
+    gap: Spacing.three,
     justifyContent: "center",
   },
-  cabecalho: {
-    gap: Espacamento.dois,
-    marginBottom: Espacamento.tres,
+  header: {
+    gap: Spacing.two,
+    marginBottom: Spacing.three,
     alignItems: "center",
   },
-  subtitulo: {
+  subtitle: {
     textAlign: "center",
   },
   logo: {
     width: 56,
     height: 56,
   },
-  formulario: {
-    gap: Espacamento.tres,
+  form: {
+    gap: Spacing.three,
   },
-  esqueci: {
-    alignSelf: "flex-end",
-  },
-  erro: {
+  error: {
     textAlign: "center",
   },
-  botao: {
+  button: {
     height: 48,
-    borderRadius: Raio.medio,
-    backgroundColor: Cores.claro.primaria,
+    borderRadius: Radius.md,
+    backgroundColor: Colors.light.primary,
     alignItems: "center",
     justifyContent: "center",
   },
-  rodape: {
+  footer: {
     textAlign: "center",
   },
 });

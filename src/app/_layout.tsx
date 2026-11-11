@@ -2,8 +2,9 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 
-import { AutenticacaoProvider } from "@/contexts/AutenticacaoContext";
-import { useTema } from "@/hooks/useTema";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { SnackbarProvider } from "@/contexts/SnackbarContext";
+import { useTheme } from "@/hooks/useTheme";
 import {
   Poppins_400Regular,
   Poppins_500Medium,
@@ -14,10 +15,10 @@ import {
 
 SplashScreen.preventAutoHideAsync();
 
-export default function LayoutRaiz() {
-  const cores = useTema();
+export default function RootLayout() {
+  const colors = useTheme();
 
-  const [fontesCarregadas] = useFonts({
+  const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
     Poppins_600SemiBold,
@@ -25,19 +26,21 @@ export default function LayoutRaiz() {
   });
 
   useEffect(() => {
-    if (fontesCarregadas) SplashScreen.hideAsync();
-  }, [fontesCarregadas]);
+    if (fontsLoaded) SplashScreen.hideAsync();
+  }, [fontsLoaded]);
 
-  if (!fontesCarregadas) return null;
+  if (!fontsLoaded) return null;
 
   return (
-    <AutenticacaoProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: cores.fundo },
-        }}
-      />
-    </AutenticacaoProvider>
+    <AuthProvider>
+      <SnackbarProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        />
+      </SnackbarProvider>
+    </AuthProvider>
   );
 }
