@@ -1,4 +1,4 @@
-import { Href, router } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSnackbar } from "@/contexts/SnackbarContext";
 import { useTheme } from "@/hooks/useTheme";
 import { registerCaregiver } from "@/services/auth";
+import { takePendingInvite } from "@/utils/invite";
 import {
   isCompleteCpf,
   isValidEmail,
@@ -24,22 +25,12 @@ import {
 } from "@/utils/masks";
 import { isValidPassword } from "@/utils/password";
 
-/**
- * Cadastro do cuidador em 2 passos:
- *   1. "Vamos começar": nome, e-mail e telefone (WhatsApp).
- *   2. "Proteja sua conta": CPF, senha (mínimo de 8 caracteres, com letra e
- *      número) e aceite dos termos de uso e da política de privacidade.
- *
- * Quem cria a conta e depois cadastra um paciente vira o cuidador master
- * desse paciente. O CPF é dado sensível (LGPD): só é coletado com o aceite
- * dos termos e o back-end guarda apenas o hash.
- * Ao criar a conta o cuidador já entra logado.
- */
 type Step = "personal" | "account";
 
 const TOTAL_STEPS = 2;
 
 export default function Register() {
+  const router = useRouter();
   const { signIn } = useAuth();
   const { showSnackbar } = useSnackbar();
 
@@ -90,13 +81,19 @@ export default function Register() {
 
       await signIn(user);
 
-      router.replace("/caregiver" as Href);
-    } catch {
+      const pendingInvite = await takePendingInvite();
+
+      router.replace(
+        (pendingInvite ? `/invite/${pendingInvite}` : "/caregiver") as Href,
+      );
+    } catch (error) {
       showSnackbar({
         variant: "error",
         title: "Não foi possível criar a conta",
         message:
-          "Algo deu errado ao criar sua conta. Verifique os dados e tente novamente.",
+          error instanceof Error
+            ? error.message
+            : "Algo deu errado ao criar sua conta. Verifique os dados e tente novamente.",
       });
     } finally {
       setIsSubmitting(false);

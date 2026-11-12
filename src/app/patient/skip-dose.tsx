@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { Href, router, useLocalSearchParams } from "expo-router";
+import { Href, useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,12 +21,8 @@ const REASONS: readonly { value: SkipReason; label: string }[] = [
 const ICON_SIZE = 24;
 const CHEVRON_SIZE = 20;
 
-/**
- * Tela aberta pelo botão "Não tomei". Cada opção já registra o motivo (sem
- * botão de confirmar) e volta para o início. "Prefiro não informar" registra
- * a dose como não tomada, sem motivo.
- */
 export default function SkipDose() {
+  const router = useRouter();
   const { doseId } = useLocalSearchParams<{ doseId: string }>();
   const { showSnackbar } = useSnackbar();
 

@@ -1,22 +1,26 @@
-import { Tabs } from "expo-router";
+import { Stack } from "expo-router";
 
-import { BottomNav } from "@/components/BottomNav";
 import { PatientProvider } from "@/contexts/PatientContext";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function CaregiverLayout() {
+  const colors = useTheme();
+
   return (
     <PatientProvider>
-      <Tabs
-        tabBar={(props) => <BottomNav {...props} />}
-        screenOptions={{ headerShown: false }}
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+        }}
       >
-        <Tabs.Screen name="index" options={{ title: "Início" }} />
-        <Tabs.Screen name="history" options={{ title: "Histórico" }} />
-        <Tabs.Screen name="medications" options={{ title: "Medicamentos" }} />
-        <Tabs.Screen name="profile" options={{ title: "Perfil" }} />
-        <Tabs.Screen name="new-medication" options={{ href: null }} />
-        <Tabs.Screen name="new-patient" options={{ href: null }} />
-      </Tabs>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="new-patient" />
+        <Stack.Screen name="new-medication" />
+        <Stack.Screen name="notifications" />
+        <Stack.Screen name="invite-caregiver" />
+        <Stack.Screen name="join-invite" />
+      </Stack>
     </PatientProvider>
   );
 }

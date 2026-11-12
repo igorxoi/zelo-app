@@ -1,3 +1,5 @@
+import { request } from "@/services/api";
+
 export type CaregiverStatus = "active" | "pending";
 
 export type Caregiver = {
@@ -6,6 +8,7 @@ export type Caregiver = {
   email: string;
   phone?: string;
   status: CaregiverStatus;
+  isMaster?: boolean;
   inviteExpiresInDays?: number;
 };
 
@@ -13,6 +16,7 @@ export type Patient = {
   id: string;
   name: string;
   relationship?: string;
+  isMaster?: boolean;
 };
 
 export type PatientDetails = Patient & {
@@ -50,235 +54,105 @@ export type CaregiverInvite = {
   link: string;
 };
 
-const INVITE_VALID_DAYS = 7;
-
-const CURRENT_CAREGIVER: Caregiver = {
-  id: "1",
-  name: "Igor Xavier",
-  email: "igor.xavier@email.com",
-  phone: "(11) 98888-7777",
-  status: "active",
+export type InvitePreview = {
+  caregiverName: string;
+  email: string;
+  invitedBy: string;
+  patientName: string;
 };
 
-let patients: PatientDetails[] = [
-  {
-    id: "1",
-    name: "Maria Xavier",
-    relationship: "Mãe",
-    nickname: "Dona Maria",
-    birthDate: "1950-03-12",
-    caregivers: [
-      CURRENT_CAREGIVER,
-      {
-        id: "2",
-        name: "Pedro Silva",
-        email: "pedro@email.com",
-        status: "pending",
-        inviteExpiresInDays: INVITE_VALID_DAYS,
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "João Xavier",
-    relationship: "Pai",
-    nickname: "Seu João",
-    birthDate: "1948-07-25",
-    caregivers: [CURRENT_CAREGIVER],
-  },
-];
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const createInviteLink = () =>
-  `https://zelo.app/convite/${Math.random().toString(36).slice(2, 10)}`;
-
-function findPatient(id: string) {
-  const patient = patients.find((item) => item.id === id);
-
-  if (!patient) throw new Error("Paciente não encontrado.");
-
-  return patient;
+export function getPatients(): Promise<Patient[]> {
+  return request<Patient[]>("GET", "/patients");
 }
 
-function savePatient(updated: PatientDetails) {
-  patients = patients.map((item) => (item.id === updated.id ? updated : item));
+export function getPatient(id: string): Promise<PatientDetails> {
+  return request<PatientDetails>("GET", `/patients/${id}`);
 }
 
-/**
- * Busca os pacientes acompanhados pelo cuidador.
- * TODO: trocar pela chamada da API.
- */
-export async function getPatients(): Promise<Patient[]> {
-  await wait(600);
-
-  return patients.map(({ id, name, relationship }) => ({
-    id,
-    name,
-    relationship,
-  }));
-}
-
-/**
- * Busca os dados completos de um paciente, com os cuidadores vinculados.
- * TODO: trocar pela chamada da API.
- */
-export async function getPatient(id: string): Promise<PatientDetails> {
-  await wait(600);
-
-  return findPatient(id);
-}
-
-/*
- * Regras de negócio dos pacientes (valem para a API real):
- *   - A relação paciente x cuidador é N para N.
- *   - Cada paciente tem um único cuidador master: quem o cadastrou. Só o
- *     master convida cuidadores e exclui o paciente.
- *   - O CPF identifica o paciente e evita cadastros duplicados. É dado
- *     sensível (LGPD): o back-end guarda só o hash.
- *   - O código de pareamento tem 6 números, vale 24 horas e só pode ser usado
- *     uma vez.
- */
-
-/**
- * Cadastra o paciente (quem cadastra vira o cuidador master) e gera o código
- * de pareamento que o paciente digita no celular dele.
- * TODO: trocar pela chamada da API.
- */
 export async function createPatient(
   payload: CreatePatientPayload,
 ): Promise<CreatePatientResult> {
-  await wait(600);
-
   if (!payload.fullName.trim()) {
     throw new Error("Informe o nome do paciente.");
   }
 
-  const patient: PatientDetails = {
-    id: String(Date.now()),
-    name: payload.fullName,
-    nickname: payload.nickname,
-    birthDate: payload.birthDate,
-    caregivers: [CURRENT_CAREGIVER],
-  };
-
-  patients = [...patients, patient];
-
-  const pairingCode = String(Math.floor(100000 + Math.random() * 900000));
-
-  return { patient: { id: patient.id, name: patient.name }, pairingCode };
+  const result = await request<CreatePatientResult>("POST", "/patients", {
+    body: payload,
+  });
+  return { patient: result.patient, pairingCode: result.pairingCode };
 }
 
-/**
- * Atualiza os dados pessoais do paciente.
- * TODO: trocar pela chamada da API.
- */
-export async function updatePatient(
+export async function createPairingCode(
+  patientId: string,
+): Promise<{ pairingCode: string; expiresAt: string }> {
+  const result = await request<{
+    pairingCode: string;
+    pairingCodeExpiresAt: string;
+  }>("POST", `/patients/${patientId}/pairing-codes`);
+
+  return {
+    pairingCode: result.pairingCode,
+    expiresAt: result.pairingCodeExpiresAt,
+  };
+}
+
+export function updatePatient(
   id: string,
   payload: UpdatePatientPayload,
 ): Promise<PatientDetails> {
-  await wait(600);
-
-  if (!payload.fullName.trim()) {
-    throw new Error("Informe o nome do paciente.");
-  }
-
-  const updated: PatientDetails = {
-    ...findPatient(id),
-    name: payload.fullName,
-    nickname: payload.nickname,
-    birthDate: payload.birthDate,
-  };
-
-  savePatient(updated);
-
-  return updated;
+  return request<PatientDetails>("PATCH", `/patients/${id}`, {
+    body: payload,
+  });
 }
 
-/**
- * Remove o paciente e todos os seus dados, de forma permanente.
- * TODO: trocar pela chamada da API.
- */
-export async function deletePatient(id: string): Promise<void> {
-  await wait(600);
-
-  patients = patients.filter((item) => item.id !== id);
+export function deletePatient(id: string): Promise<void> {
+  return request("DELETE", `/patients/${id}`);
 }
 
-/**
- * Cria o convite para um novo cuidador. Ele fica "pendente" até aceitar o link.
- * TODO: trocar pela chamada da API.
- */
 export async function inviteCaregiver({
   patientId,
   name,
   email,
 }: InviteCaregiverPayload): Promise<CaregiverInvite> {
-  await wait(600);
-
   if (!name.trim() || !email.trim()) {
     throw new Error("Informe o nome e o e-mail do cuidador.");
   }
 
-  const patient = findPatient(patientId);
-
-  const caregiver: Caregiver = {
-    id: String(Date.now()),
-    name: name.trim(),
-    email: email.trim(),
-    status: "pending",
-    inviteExpiresInDays: INVITE_VALID_DAYS,
-  };
-
-  savePatient({ ...patient, caregivers: [...patient.caregivers, caregiver] });
-
-  return { caregiver, link: createInviteLink() };
+  return request<CaregiverInvite>("POST", `/patients/${patientId}/invites`, {
+    body: { name: name.trim(), email: email.trim() },
+  });
 }
 
-/**
- * Gera um novo link para um convite pendente e renova o prazo de 7 dias.
- * TODO: trocar pela chamada da API.
- */
-export async function resendCaregiverInvite(
+export function resendCaregiverInvite(
   patientId: string,
   caregiverId: string,
 ): Promise<CaregiverInvite> {
-  await wait(600);
-
-  const patient = findPatient(patientId);
-  const current = patient.caregivers.find((item) => item.id === caregiverId);
-
-  if (!current) throw new Error("Convite não encontrado.");
-
-  const caregiver: Caregiver = {
-    ...current,
-    inviteExpiresInDays: INVITE_VALID_DAYS,
-  };
-
-  savePatient({
-    ...patient,
-    caregivers: patient.caregivers.map((item) =>
-      item.id === caregiverId ? caregiver : item,
-    ),
-  });
-
-  return { caregiver, link: createInviteLink() };
+  return request<CaregiverInvite>(
+    "POST",
+    `/patients/${patientId}/invites/${caregiverId}/resend`,
+  );
 }
 
-/**
- * Cancela um convite pendente. O link deixa de funcionar.
- * TODO: trocar pela chamada da API.
- */
-export async function cancelCaregiverInvite(
+export function cancelCaregiverInvite(
   patientId: string,
   caregiverId: string,
 ): Promise<void> {
-  await wait(600);
+  return request("DELETE", `/patients/${patientId}/invites/${caregiverId}`);
+}
 
-  const patient = findPatient(patientId);
+export function getInvite(token: string): Promise<InvitePreview> {
+  return request<InvitePreview>(
+    "GET",
+    `/invites/${encodeURIComponent(token)}`,
+    {
+      auth: false,
+    },
+  );
+}
 
-  savePatient({
-    ...patient,
-    caregivers: patient.caregivers.filter((item) => item.id !== caregiverId),
-  });
+export function acceptInvite(token: string): Promise<Patient> {
+  return request<Patient>(
+    "POST",
+    `/invites/${encodeURIComponent(token)}/accept`,
+  );
 }

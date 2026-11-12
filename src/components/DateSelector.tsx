@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { type ComponentRef, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 import { Text } from "@/components/Text";
@@ -24,7 +24,7 @@ type Props = {
 export function DateSelector({ dates, value, onChange }: Props) {
   const colors = useTheme();
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
   const [width, setWidth] = useState(0);
   const firstScroll = useRef(true);
 

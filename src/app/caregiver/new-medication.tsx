@@ -1,4 +1,4 @@
-import { Href, router, useFocusEffect } from "expo-router";
+import { Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -44,16 +44,8 @@ const INTERVAL_OPTIONS = [4, 6, 8, 12, 24].map((hours) => ({
   value: String(hours),
 }));
 
-/**
- * Cadastro de medicamento do paciente selecionado na home.
- *
- * A frequência pode ser: a cada X horas (os horários são gerados a partir do
- * primeiro), uma vez ao dia, dias específicos da semana ou horários
- * personalizados. Cada horário vira uma dose por dia, que o paciente confirma
- * no app dele. O tratamento tem data de início e, se não for contínuo, de
- * término.
- */
 export default function NewMedication() {
+  const router = useRouter();
   const { patientId } = usePatient();
   const { showSnackbar } = useSnackbar();
 
@@ -164,12 +156,14 @@ export default function NewMedication() {
 
       resetForm();
       router.back();
-    } catch {
+    } catch (error) {
       showSnackbar({
         variant: "error",
         title: "Não foi possível cadastrar",
         message:
-          "Algo deu errado ao salvar esse medicamento. Verifique os dados e tente novamente.",
+          error instanceof Error
+            ? error.message
+            : "Algo deu errado ao salvar esse medicamento. Verifique os dados e tente novamente.",
       });
     } finally {
       setIsSubmitting(false);

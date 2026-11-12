@@ -4,34 +4,27 @@ import { Text } from "@/components/Text";
 import { Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 
-export type TagVariant = "medication" | "abnormality";
+export type TagVariant = "medication" | "abnormality" | "missed";
 
 type Props = {
   label: string;
   variant?: TagVariant;
 };
 
+const VARIANT_COLORS = {
+  medication: { background: "primarySoft", text: "primary" },
+  abnormality: { background: "dangerSoft", text: "danger" },
+  missed: { background: "warningSoft", text: "warning" },
+} as const;
+
 export function Tag({ label, variant = "medication" }: Props) {
   const colors = useTheme();
 
-  const isAbnormality = variant === "abnormality";
+  const { background, text } = VARIANT_COLORS[variant];
 
   return (
-    <View
-      style={[
-        styles.tag,
-        {
-          backgroundColor: isAbnormality
-            ? colors.dangerSoft
-            : colors.primarySoft,
-        },
-      ]}
-    >
-      <Text
-        size="xs"
-        weight="medium"
-        color={isAbnormality ? "danger" : "primary"}
-      >
+    <View style={[styles.tag, { backgroundColor: colors[background] }]}>
+      <Text size="xs" weight="medium" color={text}>
         {label}
       </Text>
     </View>

@@ -1,5 +1,5 @@
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 import { DateSelector } from "@/components/DateSelector";
@@ -24,12 +24,6 @@ function getDaysOfMonth(month: number, year: number) {
   );
 }
 
-/**
- * Histórico completo do paciente. Escolha o mês, o dia e, se quiser, um
- * medicamento para filtrar. A linha do tempo mostra as doses (tomada, não
- * tomada com o motivo) e os relatos de sintomas do paciente. Tocar em um
- * registro abre os detalhes (somente leitura no MVP).
- */
 export default function History() {
   const { patientId } = usePatient();
 
@@ -44,7 +38,19 @@ export default function History() {
     year: today.getFullYear(),
   });
 
-  const [medication, setMedication] = useState<HistoryMedication | null>(null);
+  const [medicationFilter, setMedicationFilter] = useState<{
+    patientId: string;
+    value: HistoryMedication | null;
+  } | null>(null);
+  const medication =
+    medicationFilter && medicationFilter.patientId === patientId
+      ? medicationFilter.value
+      : null;
+  const setMedication = useCallback(
+    (value: HistoryMedication | null) =>
+      setMedicationFilter({ patientId, value }),
+    [patientId],
+  );
 
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(
@@ -86,13 +92,11 @@ export default function History() {
     }
   }, [patientId, selectedDate, medication]);
 
-  useEffect(() => {
-    reloadHistory();
-  }, [reloadHistory]);
-
-  useEffect(() => {
-    setMedication(null);
-  }, [patientId]);
+  useFocusEffect(
+    useCallback(() => {
+      reloadHistory();
+    }, [reloadHistory]),
+  );
 
   const handleSelectPeriod = (next: Period) => {
     setPeriod(next);
@@ -110,7 +114,7 @@ export default function History() {
         setMedication(null);
         setSelectedEvent(null);
       };
-    }, [today]),
+    }, [today, setMedication]),
   );
 
   return (

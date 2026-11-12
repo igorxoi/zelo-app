@@ -69,7 +69,11 @@ export function TimeListField({ label, values, onChange }: Props) {
         </View>
       ))}
 
-      <Pressable onPress={handleAdd} accessibilityRole="button" hitSlop={Spacing.two}>
+      <Pressable
+        onPress={handleAdd}
+        accessibilityRole="button"
+        hitSlop={Spacing.two}
+      >
         <Text size="xs" weight="semibold" color="primary">
           + Adicionar horário
         </Text>

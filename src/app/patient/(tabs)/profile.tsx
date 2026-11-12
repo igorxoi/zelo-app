@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { Href, router, useFocusEffect } from "expo-router";
+import { Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -20,14 +20,8 @@ const USER_AVATAR_SIZE = 48;
 const CAREGIVER_AVATAR_SIZE = 32;
 const ACTION_ICON_SIZE = 18;
 
-/**
- * Perfil do paciente: nome e idade, "Quem cuida de você" com botão para
- * ligar direto para o cuidador, e "Sair da conta".
- *
- * Sair apaga a sessão deste celular: o paciente para de receber lembretes e
- * só volta com um novo código de pareamento gerado pelo cuidador.
- */
 export default function PatientProfileScreen() {
+  const router = useRouter();
   const { user, signOut } = useAuth();
   const { showSnackbar } = useSnackbar();
 

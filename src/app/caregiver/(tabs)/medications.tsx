@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { Href, router, useFocusEffect } from "expo-router";
+import { Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
@@ -15,12 +15,8 @@ import { getMedications, type Medication } from "@/services/medications";
 
 const FAB_SIZE = 56;
 
-/**
- * Medicamentos ativos do paciente selecionado. O botão "+" cadastra um novo;
- * a lixeira de cada card encerra o tratamento (o medicamento sai da lista,
- * mas o histórico de doses já registradas continua disponível).
- */
 export default function Medications() {
+  const router = useRouter();
   const { patientId } = usePatient();
 
   const colors = useTheme();

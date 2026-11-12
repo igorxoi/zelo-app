@@ -73,9 +73,7 @@ export function SupportSheet({ onClose }: Props) {
 
         <Pressable
           onPress={() =>
-            openLink(
-              `https://wa.me/55${SUPPORT_WHATSAPP.replace(/\D/g, "")}`,
-            )
+            openLink(`https://wa.me/55${SUPPORT_WHATSAPP.replace(/\D/g, "")}`)
           }
           accessibilityRole="link"
           style={({ pressed }) => [styles.card, pressed && styles.pressed]}

@@ -42,7 +42,11 @@ function TimelineItem({
   const Icon = Icons.arrowRight;
 
   const dotColor =
-    event.variant === "abnormality" ? colors.danger : colors.primary;
+    event.variant === "abnormality"
+      ? colors.danger
+      : event.variant === "missed"
+        ? colors.warning
+        : colors.primary;
 
   return (
     <View style={styles.item}>
@@ -61,9 +65,11 @@ function TimelineItem({
         <Text weight="semibold" size="sm">
           {event.title}
         </Text>
-        <Text size="xs" color="textSecondary">
-          {event.description}
-        </Text>
+        {event.description ? (
+          <Text size="xs" color="textSecondary">
+            {event.description}
+          </Text>
+        ) : null}
         {event.scheduledTime && !event.skipReason && (
           <Text size="xs" color="textSecondary">
             Previsto {event.scheduledTime} · Tomado {event.time}

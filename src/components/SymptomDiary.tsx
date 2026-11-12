@@ -13,12 +13,6 @@ type Props = {
 
 const EMOJI_BOX_SIZE = 48;
 
-/**
- * Diário de sintomas do app do paciente: "Como está se sentindo hoje?".
- * Um toque em um emoji já registra o relato (sem formulário), para ser
- * simples para o idoso. O relato aparece no histórico e nas notificações
- * do cuidador.
- */
 export function SymptomDiary({ disabled = false, onSelect }: Props) {
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);

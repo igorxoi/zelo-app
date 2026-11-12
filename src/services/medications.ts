@@ -1,3 +1,5 @@
+import { request } from "@/services/api";
+
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
 export const WEEKDAYS: readonly { value: Weekday; label: string }[] = [
@@ -90,78 +92,23 @@ export function getMedicationSummary(medication: Medication): string {
   return `${frequency} · ${period}`;
 }
 
-const MOCK_SCHEDULES: Record<string, MedicationSchedule> = {
-  losartana: { type: "interval", everyHours: 12, startTime: "08:00" },
-  paracetamol: { type: "custom", times: ["08:00", "14:00", "20:00"] },
-};
-
-let medications: Medication[] = [
-  {
-    id: "1",
-    patientId: "1",
-    name: "Losartana",
-    dosage: "50mg",
-    schedule: MOCK_SCHEDULES.losartana,
-    times: getScheduleTimes(MOCK_SCHEDULES.losartana),
-    startDate: "2026-09-01",
-    endDate: null,
-    notes: "",
-  },
-  {
-    id: "2",
-    patientId: "1",
-    name: "Paracetamol",
-    dosage: "150mg",
-    schedule: MOCK_SCHEDULES.paracetamol,
-    times: getScheduleTimes(MOCK_SCHEDULES.paracetamol),
-    startDate: "2026-09-01",
-    endDate: null,
-    notes: "Tomar após as refeições",
-  },
-];
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/**
- * Lista os medicamentos ativos do paciente.
- * TODO: trocar pela chamada da API.
- */
-export async function getMedications(patientId: string): Promise<Medication[]> {
-  await wait(600); // simula a requisição
-
-  return medications.filter((medication) => medication.patientId === patientId);
+export function getMedications(patientId: string): Promise<Medication[]> {
+  return request<Medication[]>("GET", `/patients/${patientId}/medications`);
 }
 
-/**
- * Cadastra um medicamento e devolve o registro criado.
- * TODO: trocar pela chamada da API.
- */
-export async function createMedication(
-  payload: CreateMedicationPayload,
-): Promise<Medication> {
-  await wait(600);
-
+export async function createMedication({
+  patientId,
+  ...payload
+}: CreateMedicationPayload): Promise<Medication> {
   if (!payload.name.trim() || !payload.dosage.trim()) {
     throw new Error("Informe o nome e a dosagem do medicamento.");
   }
 
-  const medication: Medication = {
-    ...payload,
-    id: String(Date.now()),
-    times: getScheduleTimes(payload.schedule),
-  };
-
-  medications = [...medications, medication];
-
-  return medication;
+  return request<Medication>("POST", `/patients/${patientId}/medications`, {
+    body: payload,
+  });
 }
 
-/**
- * Encerra o medicamento: ele sai da lista, mas o histórico de doses já
- * registradas continua disponível.
- * TODO: trocar pela chamada da API.
- */
-export async function endMedication(id: string): Promise<void> {
-  await wait(600);
-  medications = medications.filter((medication) => medication.id !== id);
+export function endMedication(id: string): Promise<void> {
+  return request("DELETE", `/medications/${id}`);
 }

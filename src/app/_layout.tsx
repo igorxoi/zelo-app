@@ -3,6 +3,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 
 import { AuthProvider } from "@/contexts/AuthContext";
+import { LoadingProvider } from "@/contexts/LoadingContext";
 import { SnackbarProvider } from "@/contexts/SnackbarContext";
 import { useTheme } from "@/hooks/useTheme";
 import {
@@ -34,12 +35,14 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <SnackbarProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.background },
-          }}
-        />
+        <LoadingProvider>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.background },
+            }}
+          />
+        </LoadingProvider>
       </SnackbarProvider>
     </AuthProvider>
   );

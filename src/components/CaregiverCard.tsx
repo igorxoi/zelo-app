@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { Avatar, getInitials } from "@/components/Avatar";
+import { Tag } from "@/components/Tag";
 import { Text } from "@/components/Text";
 import { Radius, Spacing, type ThemeColor } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
@@ -45,6 +46,10 @@ export function CaregiverCard({ caregiver, showPhone, onPress }: Props) {
           </Text>
         )}
       </View>
+
+      {!isPending && caregiver.isMaster && (
+        <Tag label="Cuidador master" variant="medication" />
+      )}
 
       {isPending && (
         <View style={styles.pendingTag}>

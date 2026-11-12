@@ -16,7 +16,19 @@ import {
 
 type Props = ViewProps & {
   medication: Medication;
+  onResolved?: () => void;
 };
+
+function normalizeTime(text: string): string | null {
+  const digits = text.replace(/\D/g, "");
+  if (digits.length < 3 || digits.length > 4) return null;
+
+  const hour = Number(digits.slice(0, -2));
+  const minute = Number(digits.slice(-2));
+  if (hour > 23 || minute > 59) return null;
+
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
 
 const STATUS_OPTIONS = [
   { label: "No horário", value: "onTime" },
@@ -26,14 +38,7 @@ const STATUS_OPTIONS = [
 
 const ICON_SIZE = 22;
 
-/**
- * Alerta de dose não confirmada, mostrado na home do cuidador.
- *
- * Aparece quando o horário passou e o paciente não confirmou. O cuidador pode
- * "Confirmar dose" (o paciente tomou mas esqueceu de marcar, informando hora e
- * observações) ou marcar "Não tomou". Depois de confirmar, o alerta some.
- */
-export function DoseAlert({ medication, style, ...rest }: Props) {
+export function DoseAlert({ medication, onResolved, style, ...rest }: Props) {
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -67,21 +72,39 @@ export function DoseAlert({ medication, style, ...rest }: Props) {
   };
 
   const handleConfirm = async () => {
-    setIsSubmitting(true);
     setErrorMessage(null);
+
+    let normalizedTime = "";
+    if (wasTaken && time.trim()) {
+      const parsed = normalizeTime(time);
+      if (!parsed) {
+        setErrorMessage(
+          "Hora inválida. Use o formato HH:mm, por exemplo 21:30.",
+        );
+        return;
+      }
+      normalizedTime = parsed;
+    }
+
+    setIsSubmitting(true);
 
     try {
       await confirmDose({
         medicationId: medication.id,
         status,
-        time: wasTaken ? time : "",
+        time: normalizedTime,
         notes,
       });
 
       setIsSheetOpen(false);
       setIsConfirmed(true);
-    } catch {
-      setErrorMessage("Não foi possível confirmar a dose. Tente novamente.");
+      onResolved?.();
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível confirmar a dose. Tente novamente.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -89,10 +112,26 @@ export function DoseAlert({ medication, style, ...rest }: Props) {
 
   if (isConfirmed) return null;
 
-  const WarningIcon = Icons.warning;
+  const alertText = {
+    pending: {
+      title: "Hora do medicamento",
+      message: `${medication.name} é para ser tomado às ${medication.scheduledTime}. O paciente ainda não confirmou.`,
+    },
+    missed: {
+      title: "Medicamento não tomado",
+      message: `${medication.name} deveria ter sido tomado às ${medication.scheduledTime} e ainda não foi confirmado.`,
+    },
+    skipped: {
+      title: "Medicamento não tomado",
+      message: `O paciente marcou que não tomou ${medication.name} das ${medication.scheduledTime}.`,
+    },
+  }[medication.status ?? "missed"];
+  const { title, message } = alertText;
 
-  const title = "Medicamento não tomado";
-  const message = `${medication.name} deveria ter sido tomado às ${medication.scheduledTime} e ainda não foi confirmado.`;
+  const isNotTaken = medication.status !== "pending";
+  const AlertIcon = isNotTaken ? Icons.error : Icons.warning;
+  const iconColor = isNotTaken ? colors.danger : colors.warning;
+  const iconBackground = isNotTaken ? colors.dangerSoft : colors.warningSoft;
 
   return (
     <>
@@ -102,12 +141,10 @@ export function DoseAlert({ medication, style, ...rest }: Props) {
         style={[styles.container, style]}
       >
         <View style={styles.header}>
-          <View style={styles.iconWrapper}>
-            <WarningIcon
-              width={ICON_SIZE}
-              height={ICON_SIZE}
-              color={colors.warning}
-            />
+          <View
+            style={[styles.iconWrapper, { backgroundColor: iconBackground }]}
+          >
+            <AlertIcon width={ICON_SIZE} height={ICON_SIZE} color={iconColor} />
           </View>
 
           <Text size="sm" weight="bold" style={styles.title}>
@@ -119,40 +156,43 @@ export function DoseAlert({ medication, style, ...rest }: Props) {
           {message}
         </Text>
 
-        <View style={styles.actions}>
-          <Pressable
-            onPress={() => openSheet("onTime")}
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.actionButton,
-              styles.confirmActionButton,
-              pressed && styles.pressed,
-            ]}
-          >
-            <Text size="xs" weight="semibold" color="onPrimary">
-              Confirmar dose
-            </Text>
-          </Pressable>
+        {medication.status === "pending" && (
+          <View style={styles.actions}>
+            <Pressable
+              onPress={() => openSheet("onTime")}
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.actionButton,
+                styles.confirmActionButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text size="xs" weight="semibold" color="onPrimary">
+                Confirmar dose
+              </Text>
+            </Pressable>
 
-          <Pressable
-            onPress={() => openSheet("missed")}
-            accessibilityRole="button"
-            style={({ pressed }) => [
-              styles.actionButton,
-              styles.missedActionButton,
-              pressed && styles.pressed,
-            ]}
-          >
-            <Text size="xs" weight="semibold" color="primary">
-              Não tomou
-            </Text>
-          </Pressable>
-        </View>
+            <Pressable
+              onPress={() => openSheet("missed")}
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.actionButton,
+                styles.missedActionButton,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text size="xs" weight="semibold" color="primary">
+                Não tomou
+              </Text>
+            </Pressable>
+          </View>
+        )}
       </View>
 
       <BottomSheet
         visible={isSheetOpen}
         onClose={closeSheet}
+        loading={isSubmitting}
         title="Confirmar dose"
       >
         <View style={styles.form}>
@@ -165,7 +205,7 @@ export function DoseAlert({ medication, style, ...rest }: Props) {
           {wasTaken && (
             <Input
               label="Hora"
-              placeholder={medication.scheduledTime}
+              placeholder={`${medication.scheduledTime} (vazio = agora)`}
               value={time}
               onChangeText={setTime}
               keyboardType="numbers-and-punctuation"
@@ -178,7 +218,6 @@ export function DoseAlert({ medication, style, ...rest }: Props) {
             placeholder="Digite suas observações aqui..."
             value={notes}
             onChangeText={setNotes}
-            keyboardType="numbers-and-punctuation"
           />
 
           {errorMessage && (
@@ -193,11 +232,11 @@ export function DoseAlert({ medication, style, ...rest }: Props) {
             accessibilityRole="button"
             style={({ pressed }) => [
               styles.confirmButton,
-              (pressed || isSubmitting) && styles.pressed,
+              pressed && styles.pressed,
             ]}
           >
             <Text size="sm" weight="semibold" color="onPrimary">
-              {isSubmitting ? "Confirmando..." : "Confirmar"}
+              Confirmar
             </Text>
           </Pressable>
 

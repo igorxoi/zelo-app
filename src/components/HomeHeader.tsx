@@ -15,27 +15,22 @@ import { useTheme } from "@/hooks/useTheme";
 
 type Props = {
   name: string;
-  /** Texto pequeno acima do nome. No app do paciente: "Paciente". */
   caption?: string;
-  /** O app do paciente não mostra o avatar no topo. */
   showAvatar?: boolean;
   avatar?: ImageSourcePropType;
   hasNotification?: boolean;
+  showNotification?: boolean;
   onNotificationPress?: () => void;
-  /** Conteúdo abaixo da saudação (ex.: PatientSelect). */
   children?: ReactNode;
 };
 
-/**
- * Topo verde das telas iniciais (cuidador e paciente): saudação, sino de
- * notificações e, opcionalmente, conteúdo extra abaixo (ex.: seletor de paciente).
- */
 export function HomeHeader({
   name,
   caption = "Seja bem vindo",
   showAvatar = true,
   avatar,
   hasNotification = false,
+  showNotification = true,
   onNotificationPress,
   children,
 }: Props) {
@@ -68,19 +63,21 @@ export function HomeHeader({
           </Text>
         </View>
 
-        <Pressable
-          onPress={onNotificationPress}
-          hitSlop={Spacing.two}
-          accessibilityRole="button"
-          accessibilityLabel={
-            hasNotification ? "Notificações, há novas" : "Notificações"
-          }
-        >
-          <Feather name="bell" size={24} color={colors.onPrimary} />
-          {hasNotification && (
-            <View style={[styles.dot, { backgroundColor: colors.danger }]} />
-          )}
-        </Pressable>
+        {showNotification && (
+          <Pressable
+            onPress={onNotificationPress}
+            hitSlop={Spacing.two}
+            accessibilityRole="button"
+            accessibilityLabel={
+              hasNotification ? "Notificações, há novas" : "Notificações"
+            }
+          >
+            <Feather name="bell" size={24} color={colors.onPrimary} />
+            {hasNotification && (
+              <View style={[styles.dot, { backgroundColor: colors.danger }]} />
+            )}
+          </Pressable>
+        )}
       </View>
 
       {children}

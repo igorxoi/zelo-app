@@ -67,11 +67,11 @@ export function RemovePatientSheet({ patientId, onClose, onRemoved }: Props) {
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.confirmButton,
-            (pressed || isSubmitting) && styles.pressed,
+            pressed && styles.pressed,
           ]}
         >
           <Text size="sm" weight="semibold" color="onPrimary">
-            {isSubmitting ? "Removendo..." : "Sim, remover este paciente"}
+            Sim, remover este paciente
           </Text>
         </Pressable>
 

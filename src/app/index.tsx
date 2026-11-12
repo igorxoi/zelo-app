@@ -1,4 +1,4 @@
-import { Href, Redirect, router } from "expo-router";
+import { Href, Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -11,6 +11,7 @@ import { ToggleGroup } from "@/components/ToggleGroup";
 import { Colors, Radius, Spacing } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { type Profile, signInCaregiver, signInPatient } from "@/services/auth";
+import { takePendingInvite } from "@/utils/invite";
 
 const PROFILE_OPTIONS = [
   { label: "Sou cuidador", value: "caregiver" },
@@ -18,6 +19,7 @@ const PROFILE_OPTIONS = [
 ] as const;
 
 export default function LoginScreen() {
+  const router = useRouter();
   const { user, loading, signIn } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -41,10 +43,15 @@ export default function LoginScreen() {
 
       await signIn(signedUser);
 
+      const pendingInvite =
+        signedUser.profile === "caregiver" ? await takePendingInvite() : null;
+
       router.replace(
-        (signedUser.profile === "caregiver"
-          ? "/caregiver"
-          : "/patient") as Href,
+        (pendingInvite
+          ? `/invite/${pendingInvite}`
+          : signedUser.profile === "caregiver"
+            ? "/caregiver"
+            : "/patient") as Href,
       );
     } catch (error) {
       setErrorMessage(
@@ -122,11 +129,6 @@ export default function LoginScreen() {
             onChangeText={setPassword}
             secureTextEntry
           />
-
-          {/*
-            "Esqueci minha senha" fica fora do MVP (exige envio de e-mail).
-            Quando entrar, volta aqui com um handler que abre a recuperação.
-          */}
         </View>
       ) : (
         <CodeInput

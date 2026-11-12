@@ -67,11 +67,11 @@ export function EndMedicationSheet({ medication, onClose, onEnded }: Props) {
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.confirmButton,
-            (pressed || isSubmitting) && styles.pressed,
+            pressed && styles.pressed,
           ]}
         >
           <Text size="sm" weight="semibold" color="onPrimary">
-            {isSubmitting ? "Encerrando..." : "Sim, encerrar medicamento"}
+            Sim, encerrar medicamento
           </Text>
         </Pressable>
 

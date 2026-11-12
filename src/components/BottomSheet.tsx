@@ -83,7 +83,7 @@ export function BottomSheet({
 
           {children}
 
-          {loading && <Loading fullScreen />}
+          {loading && <Loading contained />}
         </View>
 
         <SnackbarHost />

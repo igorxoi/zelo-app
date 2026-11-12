@@ -24,9 +24,8 @@ export const Colors = {
   },
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export type ThemeColor = keyof typeof Colors.light;
 
-/** Poppins carregada uma vez no _layout. No Android cada peso é uma família própria. */
 export const FontFamily = {
   regular: "Poppins_400Regular",
   medium: "Poppins_500Medium",

@@ -1,8 +1,8 @@
 import {
   Href,
-  router,
   useFocusEffect,
   useLocalSearchParams,
+  useRouter,
 } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
@@ -19,12 +19,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { inviteCaregiver, type CaregiverInvite } from "@/services/patients";
 import { isValidEmail } from "@/utils/masks";
 
-/**
- * Convite de outro cuidador para o paciente. Só o cuidador master convida.
- * O convite gera um link válido por 7 dias para ser enviado por WhatsApp ou
- * e-mail; até ser aceito, o cuidador aparece como "pendente".
- */
 export default function InviteCaregiver() {
+  const router = useRouter();
   const { patientId } = useLocalSearchParams<{ patientId: string }>();
   const { showSnackbar } = useSnackbar();
 
@@ -68,12 +64,14 @@ export default function InviteCaregiver() {
       });
 
       setInvite(result);
-    } catch {
+    } catch (error) {
       showSnackbar({
         variant: "error",
         title: "Não foi possível gerar o convite",
         message:
-          "Algo deu errado ao gerar o convite. Verifique os dados e tente novamente.",
+          error instanceof Error
+            ? error.message
+            : "Algo deu errado ao gerar o convite. Verifique os dados e tente novamente.",
       });
     } finally {
       setIsSubmitting(false);

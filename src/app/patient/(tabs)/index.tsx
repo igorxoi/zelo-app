@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { Href, router, useFocusEffect } from "expo-router";
+import { Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
@@ -21,16 +21,8 @@ type TakenDose = { label: string; time: string };
 
 const BANNER_ICON_SIZE = 22;
 
-/**
- * Início do app do paciente. Tem 3 partes:
- *   1. Doses pendentes de hoje, com os botões "Tomei" e "Não tomei".
- *      "Tomei" registra na hora e mostra o aviso "Anotado!"; "Não tomei" abre
- *      a tela de motivo (skip-dose).
- *   2. Aviso de confirmação da última dose tomada.
- *   3. Diário de sintomas: um toque registra como o paciente está se sentindo.
- * Tudo que o paciente registra aparece para os cuidadores no histórico.
- */
 export default function PatientHome() {
+  const router = useRouter();
   const { user } = useAuth();
   const { showSnackbar } = useSnackbar();
 
@@ -48,39 +40,47 @@ export default function PatientHome() {
 
   const requestId = useRef(0);
 
-  const loadHome = useCallback(async () => {
-    if (!patientId) return;
+  const loadHome = useCallback(
+    async (silent = false) => {
+      if (!patientId) return;
 
-    const currentRequest = ++requestId.current;
-    const isCurrent = () => currentRequest === requestId.current;
+      const currentRequest = ++requestId.current;
+      const isCurrent = () => currentRequest === requestId.current;
 
-    setIsLoading(true);
-    setErrorMessage(null);
+      if (!silent) setIsLoading(true);
+      setErrorMessage(null);
 
-    try {
-      const [profile, pendingDoses] = await Promise.all([
-        getPatientProfile(patientId),
-        getPendingDoses(patientId),
-      ]);
+      try {
+        const [profile, pendingDoses] = await Promise.all([
+          getPatientProfile(patientId),
+          getPendingDoses(patientId),
+        ]);
 
-      if (isCurrent()) {
-        setNickname(profile.nickname);
-        setDoses(pendingDoses);
+        if (isCurrent()) {
+          setNickname(profile.nickname);
+          setDoses(pendingDoses);
+        }
+      } catch {
+        if (isCurrent() && !silent) {
+          setDoses([]);
+          setErrorMessage("Não foi possível carregar seus remédios.");
+        }
+      } finally {
+        if (isCurrent()) setIsLoading(false);
       }
-    } catch {
-      if (isCurrent()) {
-        setDoses([]);
-        setErrorMessage("Não foi possível carregar seus remédios.");
-      }
-    } finally {
-      if (isCurrent()) setIsLoading(false);
-    }
-  }, [patientId]);
+    },
+    [patientId],
+  );
 
-  // Recarrega ao voltar da tela de motivo, para a dose respondida sair da lista.
   useFocusEffect(
     useCallback(() => {
       loadHome();
+      const timer = setInterval(() => loadHome(true), 10000);
+
+      return () => {
+        clearInterval(timer);
+        setTakenDose(null);
+      };
     }, [loadHome]),
   );
 
@@ -91,6 +91,8 @@ export default function PatientHome() {
 
     try {
       const { time } = await takeDose(dose.id);
+
+      requestId.current++;
 
       setDoses((current) => current.filter((item) => item.id !== dose.id));
       setTakenDose({ label: `${dose.name} ${dose.dosage}`, time });
@@ -141,6 +143,7 @@ export default function PatientHome() {
         caption="Paciente"
         name={`Olá, ${nickname || firstName}`}
         showAvatar={false}
+        showNotification={false}
       />
 
       <ScrollView

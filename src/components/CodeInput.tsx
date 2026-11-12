@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { type ComponentRef, useRef, useState } from "react";
 import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
 import { Text } from "@/components/Text";
@@ -23,7 +23,7 @@ export function CodeInput({
   onComplete,
 }: Props) {
   const colors = useTheme();
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
 
   const [internal, setInternal] = useState("");
   const [focused, setFocused] = useState(false);

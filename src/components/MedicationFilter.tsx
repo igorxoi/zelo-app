@@ -17,11 +17,8 @@ import {
 type Props = {
   title: string;
   patientId?: string | null;
-  /** Os medicamentos listados são os do mês escolhido. */
   period: Period;
-  /** null = "Todos". */
   value: HistoryMedication | null;
-  /** Output: devolve o medicamento escolhido, ou null para "Todos". */
   onChange: (medication: HistoryMedication | null) => void;
 };
 
@@ -46,10 +43,8 @@ export function MedicationFilter({
   const [options, setOptions] = useState<HistoryMedication[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Identifica a requisição mais recente, para ignorar respostas antigas
   const requestId = useRef(0);
 
-  // Busca os medicamentos do mês ao abrir, então a lista sempre bate com o período
   const handleOpen = async () => {
     if (!patientId) return;
 

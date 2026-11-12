@@ -1,4 +1,4 @@
-import { Href, router, useFocusEffect } from "expo-router";
+import { Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,19 +24,8 @@ const ICON_SIZE = 20;
 
 const formatCode = (code: string) => `${code.slice(0, 3)} ${code.slice(3)}`;
 
-/**
- * Cadastro de paciente pelo cuidador, em 2 passos:
- *   1. "Quem você vai cuidar?": nome, apelido (aparece na saudação do app do
- *      paciente), data de nascimento e CPF, mais a confirmação de que o
- *      cuidador tem autorização do paciente ou do responsável legal (LGPD).
- *   2. "Conectar o celular do paciente": mostra o código de pareamento de
- *      6 números. Ele vale 24 horas, serve para um único uso e é digitado
- *      na tela de login do app do paciente (perfil "Sou paciente").
- *
- * Quem cadastra o paciente vira o cuidador master dele. Se o paciente não for
- * usar o app, o cuidador pode seguir sem conectar um celular.
- */
 export default function NewPatient() {
+  const router = useRouter();
   const { showSnackbar } = useSnackbar();
 
   const colors = useTheme();
@@ -103,12 +92,14 @@ export default function NewPatient() {
 
       setPairingCode(result.pairingCode);
       setStep("pairing");
-    } catch {
+    } catch (error) {
       showSnackbar({
         variant: "error",
         title: "Não foi possível cadastrar",
         message:
-          "Algo deu errado ao cadastrar o paciente. Verifique os dados e tente novamente.",
+          error instanceof Error
+            ? error.message
+            : "Algo deu errado ao cadastrar o paciente. Verifique os dados e tente novamente.",
       });
     } finally {
       setIsSubmitting(false);

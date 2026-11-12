@@ -21,7 +21,7 @@ const INFO_ICON_SIZE = 16;
 function getRows(event: TimelineEvent): Row[] {
   const rows: Row[] = [];
 
-  if (event.variant === "medication") {
+  if (event.variant === "medication" || event.variant === "missed") {
     if (event.scheduledTime) {
       rows.push({ label: "Previsto para", value: event.scheduledTime });
     }
@@ -43,21 +43,28 @@ function getRows(event: TimelineEvent): Row[] {
   return rows;
 }
 
-/**
- * Detalhes de um registro do histórico (somente leitura).
- * Alterar e anular registros ficou fora do MVP: exige trilha de auditoria no banco.
- */
 export function HistoryEventDetailsSheet({ event, onClose }: Props) {
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const isMedication = event.variant === "medication";
+  const isMissed = event.variant === "missed";
+  const isMedication = event.variant === "medication" || isMissed;
   const rows = getRows(event);
   const changes = event.changes ?? [];
 
   const HeaderIcon = isMedication ? Icons.pill : Icons.warning;
-  const accentColor = isMedication ? colors.primary : colors.danger;
-  const accentSoftColor = isMedication ? colors.primarySoft : colors.dangerSoft;
+
+  const accentColor = isMissed
+    ? colors.warning
+    : isMedication
+      ? colors.primary
+      : colors.danger;
+
+  const accentSoftColor = isMissed
+    ? colors.warningSoft
+    : isMedication
+      ? colors.primarySoft
+      : colors.dangerSoft;
 
   const subtitle =
     isMedication && event.scheduledTime

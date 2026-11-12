@@ -1,3 +1,5 @@
+import { request, setAuthToken } from "@/services/api";
+
 export type Profile = "caregiver" | "patient";
 
 export type AuthUser = {
@@ -11,63 +13,56 @@ export type CaregiverCredentials = {
   password: string;
 };
 
-/**
- * Login do cuidador (e-mail + senha).
- * TODO: trocar pela chamada real.
- */
-export async function signInCaregiver({
-  email,
-  password,
-}: CaregiverCredentials): Promise<AuthUser> {
-  await new Promise((resolve) => setTimeout(resolve, 600)); // simula a requisição
-
-  if (!email.trim() || !password) {
-    throw new Error("Informe e-mail e senha.");
-  }
-
-  return { id: "1", name: "Pedro Silva", profile: "caregiver" };
-}
-
 export type RegisterCaregiverPayload = {
   name: string;
   email: string;
-  /** Telefone com WhatsApp. */
   phone: string;
-  /** Somente números. Dado sensível (LGPD): o back-end guarda só o hash. */
   cpf: string;
   password: string;
 };
 
-/**
- * Cadastro do cuidador. Já devolve o usuário logado.
- * TODO: trocar pela chamada real da API. Em caso de falha, lance um erro (throw).
- */
-export async function registerCaregiver({
-  name,
+async function startSession(path: string, body: unknown): Promise<AuthUser> {
+  const session = await request<{ token: string; user: AuthUser }>(
+    "POST",
+    path,
+    { body, auth: false },
+  );
+  setAuthToken(session.token);
+  return session.user;
+}
+
+export async function signInCaregiver({
   email,
   password,
-}: RegisterCaregiverPayload): Promise<AuthUser> {
-  await new Promise((resolve) => setTimeout(resolve, 600)); // simula a requisição
+}: CaregiverCredentials): Promise<AuthUser> {
+  if (!email.trim() || !password) {
+    throw new Error("Informe e-mail e senha.");
+  }
 
-  if (!name.trim() || !email.trim() || !password) {
+  return startSession("/auth/caregiver/sign-in", {
+    email: email.trim(),
+    password,
+  });
+}
+
+export async function registerCaregiver(
+  payload: RegisterCaregiverPayload,
+): Promise<AuthUser> {
+  if (!payload.name.trim() || !payload.email.trim() || !payload.password) {
     throw new Error("Preencha todos os dados para criar a conta.");
   }
 
-  return { id: "1", name: name.trim(), profile: "caregiver" };
+  return startSession("/auth/caregiver/register", {
+    ...payload,
+    name: payload.name.trim(),
+    email: payload.email.trim(),
+  });
 }
 
-/**
- * Login do paciente: ele não tem e-mail nem senha, só entra com o código de
- * pareamento de 6 números gerado pelo cuidador no cadastro do paciente
- * (uso único, vale 24 horas).
- * TODO: trocar pela chamada real da API.
- */
 export async function signInPatient(code: string): Promise<AuthUser> {
-  await new Promise((resolve) => setTimeout(resolve, 600)); // simula a requisição
-
   if (code.length !== 6) {
     throw new Error("O código deve ter 6 números.");
   }
 
-  return { id: "2", name: "Maria Xavier", profile: "patient" };
+  return startSession("/auth/patient/sign-in", { code });
 }
