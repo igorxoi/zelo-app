@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { Href, router } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
@@ -35,6 +35,7 @@ export function InviteActionsSheet({
   onClose,
   onChanged,
 }: Props) {
+  const router = useRouter();
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { showSnackbar } = useSnackbar();

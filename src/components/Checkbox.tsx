@@ -7,7 +7,6 @@ import { Spacing, type ThemeColor } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 
 type Props = {
-  /** Texto ou trecho com links (ex.: "Li e aceito os Termos de uso"). */
   label: ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;

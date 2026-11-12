@@ -78,7 +78,10 @@ export function SelectField<T extends string>({
                 onPress={() => handleSelect(option.value)}
                 accessibilityRole="radio"
                 accessibilityState={{ checked }}
-                style={({ pressed }) => [styles.option, pressed && styles.pressed]}
+                style={({ pressed }) => [
+                  styles.option,
+                  pressed && styles.pressed,
+                ]}
               >
                 <Text
                   size="sm"

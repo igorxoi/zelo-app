@@ -8,9 +8,7 @@ import { Radius, Spacing, type ThemeColor } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 
 type Props = {
-  /** Explica o que acontece ao sair (muda entre paciente e cuidador). */
   description: string;
-  /** Aviso opcional com ícone de informação (ex.: "Quem cuida de você será avisado."). */
   notice?: string;
   onConfirm: () => Promise<void> | void;
   onClose: () => void;
@@ -18,11 +16,6 @@ type Props = {
 
 const INFO_ICON_SIZE = 16;
 
-/**
- * Confirmação de "Sair da conta", usada no perfil do paciente e do cuidador.
- * "Continuar no app" fecha o painel; "Sair da conta" executa onConfirm
- * (que deve limpar a sessão e voltar para o login).
- */
 export function SignOutSheet({
   description,
   notice,

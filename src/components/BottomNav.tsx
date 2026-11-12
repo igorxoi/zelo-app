@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Href, Tabs, useRouter, useSegments } from "expo-router";
 import type { ComponentProps } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -24,18 +24,29 @@ type BottomTabBarProps = Parameters<
   NonNullable<ComponentProps<typeof Tabs>["tabBar"]>
 >[0];
 
-export function BottomNav({
-  state,
-  descriptors,
-  navigation,
-}: BottomTabBarProps) {
+export function BottomNav({ state, descriptors }: BottomTabBarProps) {
   const colors = useTheme();
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const segments = useSegments();
 
-  const currentRoute = state.routes[state.index].name;
+  const basePath = segments[0] === "patient" ? "/patient" : "/caregiver";
+
+  const routeKey = (name: string) => name.split("/").pop() ?? name;
+
+  if (__DEV__) {
+    console.log(
+      "[BottomNav]",
+      state.routes.map((r) => r.name),
+      "ativa:",
+      state.index,
+      "grupo:",
+      segments[0],
+    );
+  }
+
+  const currentRoute = routeKey(state.routes[state.index].name);
   const activeTab = PARENT_TABS[currentRoute] ?? currentRoute;
-
-  if (!ROUTE_ICONS[activeTab]) return null;
 
   return (
     <View
@@ -51,24 +62,20 @@ export function BottomNav({
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const focused = state.index === index;
-        const active = route.name === activeTab;
+        const key = routeKey(route.name);
+        const active = key === activeTab;
         const color = active ? colors.primary : colors.textSecondary;
 
-        const iconName = ROUTE_ICONS[route.name];
+        const iconName = ROUTE_ICONS[key];
         if (!iconName) return null;
 
         const Icon = Icons[iconName];
 
         const handlePress = () => {
-          const event = navigation.emit({
-            type: "tabPress",
-            target: route.key,
-            canPreventDefault: true,
-          });
+          if (focused) return;
 
-          if (!focused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
-          }
+          const path = key === "index" ? "" : `/${key}`;
+          router.navigate(`${basePath}${path}` as Href);
         };
 
         return (

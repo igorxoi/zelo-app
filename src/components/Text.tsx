@@ -5,7 +5,7 @@ import {
   FontSize,
   type FontSizeToken,
   type FontWeight,
-  type ThemeColor
+  type ThemeColor,
 } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 

@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "zelo-app",
-    "slug": "zelo-app",
+    "name": "zelo",
+    "slug": "zelo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "zeloapp",
+    "scheme": "zelo",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"

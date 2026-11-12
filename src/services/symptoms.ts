@@ -1,8 +1,4 @@
-/**
- * Diário de sintomas do paciente ("Como está se sentindo hoje?").
- * Cada toque vira um relato no histórico do cuidador (etiqueta "Anormalidade")
- * e uma notificação do tipo "symptom".
- */
+import { request } from "@/services/api";
 
 export type SymptomType =
   | "pain"
@@ -25,14 +21,9 @@ export const SYMPTOMS: readonly {
   { value: "other", label: "Outro", emoji: "🤔" },
 ];
 
-/**
- * Registra um sintoma relatado pelo paciente.
- * TODO: trocar pela chamada da API.
- */
-export async function reportSymptom(
-  patientId: string,
+export function reportSymptom(
+  _patientId: string,
   symptom: SymptomType,
 ): Promise<void> {
-  console.log("reportSymptom", { patientId, symptom });
-  await new Promise((resolve) => setTimeout(resolve, 600)); // simula a requisição
+  return request("POST", "/patient/symptoms", { body: { symptom } });
 }

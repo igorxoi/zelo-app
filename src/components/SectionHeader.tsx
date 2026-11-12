@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { Text } from "@/components/Text";
-import { Href, router } from "expo-router";
+import { Href, useRouter } from "expo-router";
 
 type Props = {
   title: string;
@@ -11,6 +11,7 @@ type Props = {
 };
 
 export function SectionHeader({ title, linkLabel, href, onLinkPress }: Props) {
+  const router = useRouter();
   const handlePress = () => {
     if (onLinkPress) onLinkPress();
     else if (href) router.push(href);

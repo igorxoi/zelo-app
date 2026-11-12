@@ -1,4 +1,4 @@
-import { Href, router, useFocusEffect } from "expo-router";
+import { Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
@@ -50,12 +50,8 @@ function groupByDay(notifications: AppNotification[]): Section[] {
   return sections;
 }
 
-/**
- * Notificações do cuidador, agrupadas por dia. Há dois tipos:
- *   - "missedDose": o paciente não confirmou uma dose no horário;
- *   - "symptom": o paciente relatou um sintoma no diário.
- */
 export default function Notifications() {
+  const router = useRouter();
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 

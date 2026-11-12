@@ -19,10 +19,6 @@ const ICON_BOX_SIZE = 40;
 const ICON_SIZE = 22;
 const ACTION_ICON_SIZE = 18;
 
-/**
- * Card de uma dose pendente no app do paciente. Dois botões grandes e com
- * poucas palavras, pensados para idosos: "Tomei" e "Não tomei".
- */
 export function PatientDoseCard({
   dose,
   disabled = false,

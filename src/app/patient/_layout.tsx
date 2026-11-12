@@ -1,20 +1,19 @@
-import { Tabs } from "expo-router";
+import { Stack } from "expo-router";
 
-import { BottomNav } from "@/components/BottomNav";
+import { useTheme } from "@/hooks/useTheme";
 
-/**
- * Navegação do app do paciente: só duas abas (Início e Perfil). A tela de
- * motivo ("Não tomei") fica fora da barra e a BottomNav some nela.
- */
 export default function PatientLayout() {
+  const colors = useTheme();
+
   return (
-    <Tabs
-      tabBar={(props) => <BottomNav {...props} />}
-      screenOptions={{ headerShown: false }}
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.background },
+      }}
     >
-      <Tabs.Screen name="index" options={{ title: "Início" }} />
-      <Tabs.Screen name="profile" options={{ title: "Perfil" }} />
-      <Tabs.Screen name="skip-dose" options={{ href: null }} />
-    </Tabs>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="skip-dose" />
+    </Stack>
   );
 }

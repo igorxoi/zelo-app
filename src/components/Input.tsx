@@ -5,16 +5,11 @@ import {
   StyleSheet,
   TextInput,
   TextInputProps,
-  View
+  View,
 } from "react-native";
 
 import { Text } from "@/components/Text";
-import {
-  FontFamily,
-  FontSize,
-  Radius,
-  Spacing
-} from "@/constants/theme";
+import { FontFamily, FontSize, Radius, Spacing } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 
 type Props = TextInputProps & {

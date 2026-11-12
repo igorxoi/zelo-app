@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { Href, router, useFocusEffect } from "expo-router";
+import { Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 
@@ -8,11 +8,11 @@ import { BackHeader } from "@/components/BackHeader";
 import { CaregiversSheet } from "@/components/CaregiversSheet";
 import { EmptyState } from "@/components/EmptyState";
 import { Loading } from "@/components/Loading";
+import { PairingCodeSheet } from "@/components/PairingCodeSheet";
 import { ProfileMenuItem } from "@/components/ProfileMenuItem";
 import { RemovePatientSheet } from "@/components/RemovePatientSheet";
 import { SignOutSheet } from "@/components/SignOutSheet";
 import { SupportSheet } from "@/components/SupportSheet";
-import { Tag } from "@/components/Tag";
 import { Text } from "@/components/Text";
 import { Radius, Spacing, type ThemeColor } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,14 +32,8 @@ const USER_AVATAR_SIZE = 48;
 const PATIENT_AVATAR_SIZE = 32;
 const TRASH_ICON_SIZE = 20;
 
-/**
- * Perfil do cuidador. Concentra o que antes ficava na tela "Editar paciente":
- *   - Tocar em um paciente abre a lista de cuidadores dele (e o convite).
- *   - A lixeira exclui o paciente e todos os dados dele.
- * Convidar cuidadores e excluir o paciente são ações do cuidador master:
- * quem não é master não vê o botão de convite nem a lixeira.
- */
 export default function Profile() {
+  const router = useRouter();
   const { signOut } = useAuth();
   const { patientId, setPatientId } = usePatient();
 
@@ -53,6 +47,7 @@ export default function Profile() {
     null,
   );
   const [patientToRemove, setPatientToRemove] = useState<Patient | null>(null);
+  const [patientForCode, setPatientForCode] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -92,7 +87,6 @@ export default function Profile() {
     }, [loadProfile]),
   );
 
-  // Abre a lista de cuidadores do paciente (precisa dos detalhes do paciente).
   const openCaregivers = async (patient: Patient) => {
     setIsLoading(true);
 
@@ -116,7 +110,6 @@ export default function Profile() {
   };
 
   const handlePatientRemoved = () => {
-    // A home não pode continuar apontando para um paciente que não existe mais.
     if (patientToRemove?.id === patientId) setPatientId("");
     loadProfile();
   };
@@ -160,8 +153,6 @@ export default function Profile() {
                     {profile.phone}
                   </Text>
                 </View>
-
-                <Tag label={profile.roleLabel} variant="medication" />
               </View>
 
               <View style={styles.section}>
@@ -197,7 +188,24 @@ export default function Profile() {
                       </View>
                     </Pressable>
 
-                    {profile.isMaster && (
+                    <Pressable
+                      onPress={() => setPatientForCode(patient)}
+                      hitSlop={Spacing.two}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Gerar novo código de acesso de ${patient.name}`}
+                      style={({ pressed }) => [
+                        styles.trashButton,
+                        pressed && styles.pressed,
+                      ]}
+                    >
+                      <Feather
+                        name="key"
+                        size={TRASH_ICON_SIZE}
+                        color={colors.primary}
+                      />
+                    </Pressable>
+
+                    {patient.isMaster && (
                       <Pressable
                         onPress={() => setPatientToRemove(patient)}
                         hitSlop={Spacing.two}
@@ -247,6 +255,13 @@ export default function Profile() {
                     }
                   />
                   <ProfileMenuItem
+                    icon="user-plus"
+                    label="Tenho um convite"
+                    onPress={() =>
+                      router.push("/caregiver/join-invite" as Href)
+                    }
+                  />
+                  <ProfileMenuItem
                     icon="help-circle"
                     label="Ajuda e suporte"
                     onPress={() => setSheet("support")}
@@ -277,9 +292,20 @@ export default function Profile() {
         <CaregiversSheet
           patientId={patientDetails.id}
           caregivers={patientDetails.caregivers}
-          canInvite={profile.isMaster}
+          canInvite={
+            patients.find((item) => item.id === patientDetails.id)?.isMaster ??
+            false
+          }
           onClose={() => setPatientDetails(null)}
           onChanged={refreshCaregivers}
+        />
+      )}
+
+      {patientForCode && (
+        <PairingCodeSheet
+          patientId={patientForCode.id}
+          patientName={patientForCode.name}
+          onClose={() => setPatientForCode(null)}
         />
       )}
 

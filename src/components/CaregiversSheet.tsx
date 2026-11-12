@@ -1,4 +1,4 @@
-import { Href, router } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
@@ -13,16 +13,11 @@ import type { Caregiver } from "@/services/patients";
 type Props = {
   patientId: string;
   caregivers: Caregiver[];
-  /** Só o cuidador master pode convidar outros cuidadores. */
   canInvite?: boolean;
   onClose: () => void;
   onChanged: () => void;
 };
 
-/**
- * Lista de cuidadores de um paciente. Convites pendentes abrem as ações
- * (reenviar / cancelar); o botão "Convidar cuidador" abre a tela de convite.
- */
 export function CaregiversSheet({
   patientId,
   caregivers,
@@ -30,6 +25,7 @@ export function CaregiversSheet({
   onClose,
   onChanged,
 }: Props) {
+  const router = useRouter();
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 

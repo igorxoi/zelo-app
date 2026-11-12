@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -14,6 +14,7 @@ type Props = {
 };
 
 export function PageHeader({ title, showBackButton = true, onBack }: Props) {
+  const router = useRouter();
   const colors = useTheme();
   const insets = useSafeAreaInsets();
 

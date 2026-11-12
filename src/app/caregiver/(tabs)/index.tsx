@@ -1,9 +1,9 @@
-import { Href, router, useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Href, useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 import { DateSelector } from "@/components/DateSelector";
-import { DoseAlert } from "@/components/DoseAlert";
+import { DoseAlertCarousel } from "@/components/DoseAlertCarousel";
 import { EmptyState } from "@/components/EmptyState";
 import { HomeHeader } from "@/components/HomeHeader";
 import { Loading } from "@/components/Loading";
@@ -27,14 +27,10 @@ function getLast7Days(base: Date) {
   });
 }
 
-/**
- * Início do cuidador. De cima para baixo:
- *   - Cabeçalho com o sino (abre as notificações) e o seletor de paciente.
- *   - Lembretes: um alerta (DoseAlert) para cada dose do paciente que passou
- *     do horário sem confirmação, com "Confirmar dose" e "Não tomou".
- *   - Seleção de data e a linha do tempo do dia (doses e relatos de sintomas).
- */
+const REFRESH_MS = 10000;
+
 export default function CaregiverHome() {
+  const router = useRouter();
   const colors = useTheme();
   const { patientId, setPatientId } = usePatient();
   const { user } = useAuth();
@@ -47,16 +43,21 @@ export default function CaregiverHome() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoadingPatients, setIsLoadingPatients] = useState(true);
 
-  const [missedDoses, setMissedDoses] = useState<Medication[]>([]);
+  const [missedState, setMissedState] = useState<{
+    patientId: string;
+    doses: Medication[];
+  }>({ patientId: "", doses: [] });
 
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const missedDoses =
+    missedState.patientId === patientId ? missedState.doses : [];
+  const eventsRequest = useRef(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const isLoading = isLoadingPatients || isLoadingEvents;
 
-  // Recarrega os pacientes ao voltar para a home (ex.: depois de cadastrar ou
-  // excluir um paciente no perfil) e garante que o selecionado ainda existe.
   useFocusEffect(
     useCallback(() => {
       let isCurrent = true;
@@ -86,55 +87,56 @@ export default function CaregiverHome() {
     }, [patientId, setPatientId]),
   );
 
-  // Lembretes: doses atrasadas do paciente selecionado.
-  useFocusEffect(
-    useCallback(() => {
-      if (!patientId) return;
-
-      let isCurrent = true;
-
-      getMissedDoses(patientId)
-        .then((result) => {
-          if (isCurrent) setMissedDoses(result);
-        })
-        .catch(() => {
-          if (isCurrent) setMissedDoses([]);
-        });
-
-      return () => {
-        isCurrent = false;
-      };
-    }, [patientId]),
-  );
-
-  useEffect(() => {
+  const loadMissedDoses = useCallback(async () => {
     if (!patientId) return;
 
-    let isCurrent = true;
+    try {
+      setMissedState({ patientId, doses: await getMissedDoses(patientId) });
+    } catch {}
+  }, [patientId]);
 
-    const loadEvents = async () => {
-      setIsLoadingEvents(true);
+  useFocusEffect(
+    useCallback(() => {
+      loadMissedDoses();
+      const timer = setInterval(loadMissedDoses, REFRESH_MS);
+
+      return () => clearInterval(timer);
+    }, [loadMissedDoses]),
+  );
+
+  const loadEvents = useCallback(
+    async (silent = false) => {
+      if (!patientId) return;
+
+      const currentRequest = ++eventsRequest.current;
+      const isCurrent = () => currentRequest === eventsRequest.current;
+
+      if (!silent) setIsLoadingEvents(true);
       setErrorMessage(null);
 
       try {
         const result = await getHistory({ patientId, date: selectedDate });
-        if (isCurrent) setEvents(result);
+        if (isCurrent()) setEvents(result);
       } catch {
-        if (isCurrent) {
+        if (isCurrent() && !silent) {
           setEvents([]);
           setErrorMessage("Não foi possível carregar o histórico.");
         }
       } finally {
-        if (isCurrent) setIsLoadingEvents(false);
+        if (isCurrent()) setIsLoadingEvents(false);
       }
-    };
+    },
+    [patientId, selectedDate],
+  );
 
-    loadEvents();
+  useFocusEffect(
+    useCallback(() => {
+      loadEvents();
+      const timer = setInterval(() => loadEvents(true), REFRESH_MS);
 
-    return () => {
-      isCurrent = false;
-    };
-  }, [patientId, selectedDate]);
+      return () => clearInterval(timer);
+    }, [loadEvents, reloadKey]),
+  );
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.primary }]}>
@@ -156,9 +158,13 @@ export default function CaregiverHome() {
         style={[styles.sheet, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
       >
-        {missedDoses.map((medication) => (
-          <DoseAlert key={medication.id} medication={medication} />
-        ))}
+        <DoseAlertCarousel
+          doses={missedDoses}
+          onResolved={() => {
+            loadMissedDoses();
+            setReloadKey((key) => key + 1);
+          }}
+        />
 
         <View style={styles.section}>
           <SectionHeader title="Selecione a data" />
@@ -206,7 +212,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.four,
     gap: Spacing.four,
   },
   section: {
