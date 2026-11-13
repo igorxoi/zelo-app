@@ -170,7 +170,6 @@ const createStyles = (colors: Record<ThemeColor, string>) =>
     content: {
       gap: Spacing.three,
       paddingHorizontal: Spacing.four,
-      paddingTop: Spacing.two,
     },
     row: {
       flexDirection: "row",

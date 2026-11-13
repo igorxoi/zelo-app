@@ -206,7 +206,7 @@ const createStyles = (colors: Record<ThemeColor, string>) =>
     },
     list: {
       gap: Spacing.two,
-      paddingHorizontal: Spacing.three,
+      paddingHorizontal: Spacing.four,
       paddingTop: Spacing.three,
     },
     option: {
