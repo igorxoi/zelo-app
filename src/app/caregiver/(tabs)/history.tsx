@@ -194,6 +194,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.three,
+    paddingBottom: Spacing.five,
     gap: Spacing.four,
   },
 });

@@ -54,11 +54,14 @@ export function BottomNav({ state, descriptors }: BottomTabBarProps) {
         styles.container,
         {
           backgroundColor: colors.background,
-          borderTopColor: colors.backgroundSelected,
           paddingBottom: PADDING + insets.bottom,
         },
       ]}
     >
+      <View
+        style={[styles.divider, { backgroundColor: colors.backgroundSelected }]}
+      />
+
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const focused = state.index === index;
@@ -109,7 +112,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     padding: PADDING,
-    borderTopWidth: 1,
+    paddingTop: PADDING + 1,
+    zIndex: 1,
+  },
+  divider: {
+    position: "absolute",
+    top: 1,
+    left: 0,
+    right: 0,
+    height: 1,
+    pointerEvents: "none",
   },
   item: {
     flex: 1,
