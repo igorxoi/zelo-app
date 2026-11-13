@@ -8,7 +8,11 @@ import { Input } from "@/components/Input";
 import { Text } from "@/components/Text";
 import { Radius, Spacing, type ThemeColor } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
-import { extractInviteToken } from "@/utils/invite";
+import {
+  formatInviteCode,
+  isInviteCode,
+  normalizeInviteCode,
+} from "@/utils/invite";
 
 export default function JoinInvite() {
   const router = useRouter();
@@ -16,13 +20,13 @@ export default function JoinInvite() {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const insets = useSafeAreaInsets();
 
-  const [text, setText] = useState("");
-  const token = extractInviteToken(text);
-  const showError = text.trim().length > 0 && !token;
+  const [code, setCode] = useState("");
+  const isValid = isInviteCode(code);
+  const showError = code.length === 8 && !isValid;
 
   const handleContinue = () => {
-    if (!token) return;
-    router.push(`/invite/${token}` as Href);
+    if (!isValid) return;
+    router.push(`/invite/${code}` as Href);
   };
 
   return (
@@ -31,18 +35,19 @@ export default function JoinInvite() {
 
       <View style={styles.content}>
         <Input
-          label="Link ou código do convite"
-          placeholder="Cole aqui o que você recebeu"
-          value={text}
-          onChangeText={setText}
-          autoCapitalize="none"
+          label="Código do convite"
+          placeholder="XXXX-XXXX"
+          value={formatInviteCode(code)}
+          onChangeText={(text) => setCode(normalizeInviteCode(text))}
+          autoCapitalize="characters"
           autoCorrect={false}
+          maxLength={9}
         />
 
         <Text size="xs" color={showError ? "danger" : "placeholder"}>
           {showError
-            ? "Não parece um convite. Confira o link que você recebeu."
-            : "O cuidador master envia o link por WhatsApp ou e-mail."}
+            ? "Confira o código: ele não tem os caracteres 0, 1, I nem O."
+            : "O cuidador master envia o código por WhatsApp ou e-mail. Você precisa estar logado com o e-mail que recebeu o convite."}
         </Text>
       </View>
 
@@ -54,19 +59,19 @@ export default function JoinInvite() {
       >
         <Pressable
           onPress={handleContinue}
-          disabled={!token}
+          disabled={!isValid}
           accessibilityRole="button"
-          accessibilityState={{ disabled: !token }}
+          accessibilityState={{ disabled: !isValid }}
           style={({ pressed }) => [
             styles.button,
-            !token && styles.buttonDisabled,
+            !isValid && styles.buttonDisabled,
             pressed && styles.pressed,
           ]}
         >
           <Text
             size="sm"
             weight="semibold"
-            color={token ? "onPrimary" : "textSecondary"}
+            color={isValid ? "onPrimary" : "textSecondary"}
           >
             Continuar
           </Text>

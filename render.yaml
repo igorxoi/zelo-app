@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: zelo-app
+    runtime: static
+    buildCommand: npm install && npx expo export --platform web && node scripts/pwa-head.mjs
+    staticPublishPath: dist
+    envVars:
+      - key: EXPO_PUBLIC_API_URL
+        value: https://zelo-api-tnnx.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY

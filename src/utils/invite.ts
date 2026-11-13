@@ -1,31 +1,21 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+const INVITE_CODE_LENGTH = 8;
+const INVITE_CODE_PATTERN = /^[A-HJ-NP-Z2-9]{8}$/;
 
-const PENDING_KEY = "zelo:pending-invite";
-
-export function extractInviteToken(text: string): string | null {
-  const last = text.trim().split(/[?#]/)[0].split("/").filter(Boolean).pop();
-
-  return last && /^[A-Za-z0-9_-]{20,}$/.test(last) ? last : null;
+export function normalizeInviteCode(text: string): string {
+  return text
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, INVITE_CODE_LENGTH);
 }
 
-export async function savePendingInvite(token: string) {
-  try {
-    await AsyncStorage.setItem(PENDING_KEY, token);
-  } catch {}
+export function isInviteCode(code: string): boolean {
+  return INVITE_CODE_PATTERN.test(code);
 }
 
-export async function takePendingInvite(): Promise<string | null> {
-  try {
-    const token = await AsyncStorage.getItem(PENDING_KEY);
-    if (token) await AsyncStorage.removeItem(PENDING_KEY);
-    return token;
-  } catch {
-    return null;
-  }
-}
+export function formatInviteCode(code: string): string {
+  const normalized = normalizeInviteCode(code);
 
-export async function clearPendingInvite() {
-  try {
-    await AsyncStorage.removeItem(PENDING_KEY);
-  } catch {}
+  return normalized.length > 4
+    ? `${normalized.slice(0, 4)}-${normalized.slice(4)}`
+    : normalized;
 }

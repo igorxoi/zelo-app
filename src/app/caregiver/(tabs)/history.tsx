@@ -7,11 +7,13 @@ import { EmptyState } from "@/components/EmptyState";
 import { HistoryEventDetailsSheet } from "@/components/HistoryEventDetailsSheet";
 import { Loading } from "@/components/Loading";
 import { MedicationFilter } from "@/components/MedicationFilter";
+import { NoPatientState } from "@/components/NoPatientState";
 import { PageHeader } from "@/components/PageHeader";
 import { Period, PeriodFilter } from "@/components/PeriodFilter";
 import { Timeline, TimelineEvent } from "@/components/Timeline";
 import { Spacing } from "@/constants/theme";
 import { usePatient } from "@/contexts/PatientContext";
+import { usePatientStatus } from "@/hooks/usePatientStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { getHistory, type HistoryMedication } from "@/services/history";
 
@@ -26,6 +28,7 @@ function getDaysOfMonth(month: number, year: number) {
 
 export default function History() {
   const { patientId } = usePatient();
+  const { status, ready } = usePatientStatus();
 
   const colors = useTheme();
 
@@ -57,6 +60,7 @@ export default function History() {
     null,
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const requestId = useRef(0);
@@ -67,7 +71,7 @@ export default function History() {
   );
 
   const reloadHistory = useCallback(async () => {
-    if (!patientId) return;
+    if (!patientId || !ready) return;
 
     const currentRequest = ++requestId.current;
     const isCurrent = () => currentRequest === requestId.current;
@@ -88,9 +92,12 @@ export default function History() {
         setErrorMessage("Não foi possível carregar o histórico.");
       }
     } finally {
-      if (isCurrent()) setIsLoading(false);
+      if (isCurrent()) {
+        setIsLoading(false);
+        setLoaded(true);
+      }
     }
-  }, [patientId, selectedDate, medication]);
+  }, [patientId, ready, selectedDate, medication]);
 
   useFocusEffect(
     useCallback(() => {
@@ -125,36 +132,48 @@ export default function History() {
         style={[styles.sheet, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
       >
-        <PeriodFilter value={period} onChange={handleSelectPeriod} />
-
-        <DateSelector
-          dates={dates}
-          value={selectedDate}
-          onChange={setSelectedDate}
-        />
-
-        <MedicationFilter
-          title="Histórico do paciente"
-          patientId={patientId}
-          period={period}
-          value={medication}
-          onChange={setMedication}
-        />
-
-        {errorMessage ? (
+        {status === "loading" ? null : status === "none" ? (
+          <NoPatientState lead="Para ver o histórico, primeiro adicione um paciente em" />
+        ) : status === "error" ? (
           <EmptyState
             icon="alert-circle"
             title="Algo deu errado"
-            message={errorMessage}
-          />
-        ) : events.length === 0 && !isLoading ? (
-          <EmptyState
-            icon="calendar"
-            title="Nenhum registro neste dia"
-            message="Quando houver medicamentos ou relatos, eles aparecem aqui."
+            message="Não foi possível carregar os pacientes."
           />
         ) : (
-          <Timeline events={events} onEventPress={setSelectedEvent} />
+          <>
+            <PeriodFilter value={period} onChange={handleSelectPeriod} />
+
+            <DateSelector
+              dates={dates}
+              value={selectedDate}
+              onChange={setSelectedDate}
+            />
+
+            <MedicationFilter
+              title="Histórico do paciente"
+              patientId={patientId}
+              period={period}
+              value={medication}
+              onChange={setMedication}
+            />
+
+            {errorMessage ? (
+              <EmptyState
+                icon="alert-circle"
+                title="Algo deu errado"
+                message={errorMessage}
+              />
+            ) : events.length === 0 && loaded && !isLoading ? (
+              <EmptyState
+                icon="calendar"
+                title="Nenhum registro neste dia"
+                message="Quando houver medicamentos ou relatos, eles aparecem aqui."
+              />
+            ) : (
+              <Timeline events={events} onEventPress={setSelectedEvent} />
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -165,7 +184,9 @@ export default function History() {
         />
       )}
 
-      {isLoading && <Loading fullScreen />}
+      {(isLoading || status === "loading" || (ready && !loaded)) && (
+        <Loading fullScreen />
+      )}
     </View>
   );
 }
@@ -179,6 +200,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.three,
+    paddingBottom: Spacing.five,
     gap: Spacing.four,
   },
 });

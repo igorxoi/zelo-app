@@ -8,30 +8,37 @@ import { Text } from "@/components/Text";
 import { Radius, Spacing, type ThemeColor } from "@/constants/theme";
 import { useSnackbar } from "@/contexts/SnackbarContext";
 import { useTheme } from "@/hooks/useTheme";
+import { formatInviteCode } from "@/utils/invite";
 
 type Props = {
   caregiverName: string;
-  link: string;
+  code: string;
+  email?: string;
   onClose: () => void;
 };
 
 const COPY_ICON_SIZE = 18;
 
-export function InviteSentSheet({ caregiverName, link, onClose }: Props) {
+export function InviteSentSheet({
+  caregiverName,
+  code,
+  email,
+  onClose,
+}: Props) {
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { showSnackbar } = useSnackbar();
 
   const firstName = caregiverName.trim().split(/\s+/)[0];
-  const displayLink = link.replace(/^https?:\/\//, "");
+  const displayCode = formatInviteCode(code);
 
   const handleCopy = async () => {
     try {
-      await Clipboard.setStringAsync(link);
+      await Clipboard.setStringAsync(displayCode);
 
       showSnackbar({
         variant: "success",
-        title: "Link copiado",
+        title: "Código copiado",
         message: "Agora é só colar na conversa com o cuidador.",
       });
     } catch {
@@ -46,7 +53,7 @@ export function InviteSentSheet({ caregiverName, link, onClose }: Props) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Você foi convidado(a) para cuidar de um paciente no Zelo. Acesse o link: ${link}\nEle vale por 7 dias e só pode ser usado uma vez.`,
+        message: `Você foi convidado(a) para cuidar de um paciente no Zelo. No app, entre em Perfil > Tenho um convite e digite o código: ${displayCode}${email ? `\nUse o e-mail ${email} para entrar.` : ""}\nO código vale por 7 dias e só pode ser usado uma vez.`,
       });
     } catch {
       showSnackbar({
@@ -62,24 +69,24 @@ export function InviteSentSheet({ caregiverName, link, onClose }: Props) {
       visible
       onClose={onClose}
       title="Convite enviado"
-      subtitle={`Envie o link para ${firstName}. Ele vale por 7 dias e só pode ser usado uma vez.`}
+      subtitle={`Envie o código para ${firstName}. Ele vale por 7 dias e só pode ser usado uma vez.`}
     >
       <View style={styles.content}>
-        <View style={styles.linkField}>
+        <View style={styles.codeField}>
           <Text size="sm" weight="semibold">
-            Link do convite
+            Código do convite
           </Text>
 
-          <View style={styles.linkBox}>
-            <Text size="sm" style={styles.linkText} numberOfLines={1}>
-              {displayLink}
+          <View style={styles.codeBox}>
+            <Text size="lg" weight="bold" style={styles.codeText}>
+              {displayCode}
             </Text>
 
             <Pressable
               onPress={handleCopy}
               hitSlop={Spacing.two}
               accessibilityRole="button"
-              accessibilityLabel="Copiar link"
+              accessibilityLabel="Copiar código"
             >
               <Feather
                 name="copy"
@@ -100,7 +107,7 @@ export function InviteSentSheet({ caregiverName, link, onClose }: Props) {
             ]}
           >
             <Text size="sm" weight="semibold" color="onPrimary">
-              Compartilhar link
+              Compartilhar código
             </Text>
           </Pressable>
 
@@ -126,21 +133,23 @@ const createStyles = (colors: Record<ThemeColor, string>) =>
       paddingHorizontal: Spacing.four,
       paddingTop: Spacing.three,
     },
-    linkField: {
+    codeField: {
       gap: Spacing.two,
     },
-    linkBox: {
+    codeBox: {
       flexDirection: "row",
       alignItems: "center",
       gap: Spacing.two,
-      height: 48,
+      height: 56,
       paddingHorizontal: Spacing.three,
       borderWidth: 1,
       borderColor: colors.border,
       borderRadius: Radius.md,
     },
-    linkText: {
+    codeText: {
       flex: 1,
+      letterSpacing: 2,
+      textAlign: "center",
     },
     actions: {
       gap: Spacing.two,

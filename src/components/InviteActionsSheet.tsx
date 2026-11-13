@@ -61,7 +61,7 @@ export function InviteActionsSheet({
         variant: "error",
         title: "Não foi possível reenviar",
         message:
-          "Algo deu errado ao gerar o link do convite. Tente novamente em instantes.",
+          "Algo deu errado ao gerar o código do convite. Tente novamente em instantes.",
       });
     } finally {
       setIsSubmitting(false);
@@ -77,7 +77,8 @@ export function InviteActionsSheet({
     return (
       <InviteSentSheet
         caregiverName={caregiver.name}
-        link={resentInvite.link}
+        code={resentInvite.code}
+        email={caregiver.email}
         onClose={onClose}
       />
     );
@@ -170,7 +171,6 @@ const createStyles = (colors: Record<ThemeColor, string>) =>
     content: {
       gap: Spacing.three,
       paddingHorizontal: Spacing.four,
-      paddingTop: Spacing.two,
     },
     row: {
       flexDirection: "row",

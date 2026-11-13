@@ -94,6 +94,7 @@ const createStyles = (colors: Record<ThemeColor, string>) =>
   StyleSheet.create({
     actions: {
       paddingHorizontal: Spacing.four,
+      paddingTop: Spacing.three,
       gap: Spacing.two,
     },
     confirmButton: {

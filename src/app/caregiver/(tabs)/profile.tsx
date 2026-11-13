@@ -251,7 +251,9 @@ export default function Profile() {
                     icon="bell"
                     label="Notificações"
                     onPress={() =>
-                      router.push("/caregiver/notifications" as Href)
+                      router.push(
+                        "/caregiver/notifications?from=profile" as Href,
+                      )
                     }
                   />
                   <ProfileMenuItem

@@ -11,7 +11,6 @@ import { ToggleGroup } from "@/components/ToggleGroup";
 import { Colors, Radius, Spacing } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
 import { type Profile, signInCaregiver, signInPatient } from "@/services/auth";
-import { takePendingInvite } from "@/utils/invite";
 
 const PROFILE_OPTIONS = [
   { label: "Sou cuidador", value: "caregiver" },
@@ -43,15 +42,10 @@ export default function LoginScreen() {
 
       await signIn(signedUser);
 
-      const pendingInvite =
-        signedUser.profile === "caregiver" ? await takePendingInvite() : null;
-
       router.replace(
-        (pendingInvite
-          ? `/invite/${pendingInvite}`
-          : signedUser.profile === "caregiver"
-            ? "/caregiver"
-            : "/patient") as Href,
+        (signedUser.profile === "caregiver"
+          ? "/caregiver"
+          : "/patient") as Href,
       );
     } catch (error) {
       setErrorMessage(

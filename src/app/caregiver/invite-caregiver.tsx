@@ -152,7 +152,8 @@ export default function InviteCaregiver() {
       {invite && (
         <InviteSentSheet
           caregiverName={invite.caregiver.name}
-          link={invite.link}
+          code={invite.code}
+          email={invite.caregiver.email}
           onClose={goToProfile}
         />
       )}
