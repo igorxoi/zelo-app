@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { ReactNode } from "react";
 import { StyleSheet, View, ViewProps } from "react-native";
 
 import { Text } from "@/components/Text";
@@ -7,7 +8,7 @@ import { useTheme } from "@/hooks/useTheme";
 
 type Props = ViewProps & {
   title: string;
-  message?: string;
+  message?: ReactNode;
   icon?: keyof typeof Feather.glyphMap;
 };
 

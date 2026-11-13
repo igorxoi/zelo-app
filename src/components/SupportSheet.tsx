@@ -13,7 +13,7 @@ type Props = {
   onClose: () => void;
 };
 
-const SUPPORT_EMAIL = "suporte@cuidarmais.app";
+const SUPPORT_EMAIL = "suporte@zelo.app";
 const SUPPORT_WHATSAPP = "(11) 99999-9999";
 
 const TIPS = [

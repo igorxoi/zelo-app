@@ -9,6 +9,7 @@ import { HomeHeader } from "@/components/HomeHeader";
 import { Loading } from "@/components/Loading";
 import { PatientSelect } from "@/components/PatientSelect";
 import { SectionHeader } from "@/components/SectionHeader";
+import { Text } from "@/components/Text";
 import { Timeline, TimelineEvent } from "@/components/Timeline";
 import { Spacing } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,6 +43,7 @@ export default function CaregiverHome() {
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoadingPatients, setIsLoadingPatients] = useState(true);
+  const [patientsLoaded, setPatientsLoaded] = useState(false);
 
   const [missedState, setMissedState] = useState<{
     patientId: string;
@@ -56,6 +58,8 @@ export default function CaregiverHome() {
   const eventsRequest = useRef(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const hasPatient = patients.some((patient) => patient.id === patientId);
+  const hasNoPatients = patientsLoaded && patients.length === 0;
   const isLoading = isLoadingPatients || isLoadingEvents;
 
   useFocusEffect(
@@ -68,6 +72,8 @@ export default function CaregiverHome() {
           if (!isCurrent) return;
 
           setPatients(result);
+          setPatientsLoaded(true);
+          setErrorMessage(null);
           if (!result.some((patient) => patient.id === patientId)) {
             setPatientId(result[0]?.id ?? "");
           }
@@ -88,12 +94,12 @@ export default function CaregiverHome() {
   );
 
   const loadMissedDoses = useCallback(async () => {
-    if (!patientId) return;
+    if (!patientId || !hasPatient) return;
 
     try {
       setMissedState({ patientId, doses: await getMissedDoses(patientId) });
     } catch {}
-  }, [patientId]);
+  }, [patientId, hasPatient]);
 
   useFocusEffect(
     useCallback(() => {
@@ -106,7 +112,7 @@ export default function CaregiverHome() {
 
   const loadEvents = useCallback(
     async (silent = false) => {
-      if (!patientId) return;
+      if (!patientId || !hasPatient) return;
 
       const currentRequest = ++eventsRequest.current;
       const isCurrent = () => currentRequest === eventsRequest.current;
@@ -126,7 +132,7 @@ export default function CaregiverHome() {
         if (isCurrent()) setIsLoadingEvents(false);
       }
     },
-    [patientId, selectedDate],
+    [patientId, hasPatient, selectedDate],
   );
 
   useFocusEffect(
@@ -147,55 +153,84 @@ export default function CaregiverHome() {
           router.push("/caregiver/notifications" as Href)
         }
       >
-        <PatientSelect
-          patients={patients}
-          value={patientId}
-          onChange={setPatientId}
-        />
+        {patients.length > 0 && (
+          <PatientSelect
+            patients={patients}
+            value={patientId}
+            onChange={setPatientId}
+          />
+        )}
       </HomeHeader>
 
       <ScrollView
         style={[styles.sheet, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
       >
-        <DoseAlertCarousel
-          doses={missedDoses}
-          onResolved={() => {
-            loadMissedDoses();
-            setReloadKey((key) => key + 1);
-          }}
-        />
-
-        <View style={styles.section}>
-          <SectionHeader title="Selecione a data" />
-
-          <DateSelector
-            dates={dates}
-            value={selectedDate}
-            onChange={setSelectedDate}
-          />
-        </View>
-
-        <SectionHeader
-          title="Histórico do paciente"
-          linkLabel="Ver todos"
-          href="/caregiver/history"
-        />
-
-        {errorMessage ? (
+        {hasNoPatients ? (
           <EmptyState
-            icon="alert-circle"
-            title="Algo deu errado"
-            message={errorMessage}
-          />
-        ) : events.length === 0 && !isLoading ? (
-          <EmptyState
-            icon="calendar"
-            title="Nenhum registro neste dia"
-            message="Quando houver medicamentos ou relatos, eles aparecem aqui."
+            icon="user-plus"
+            title="Nenhum paciente cadastrado"
+            message={
+              <>
+                Para começar, vá em{" "}
+                <Text size="sm" weight="bold">
+                  Perfil
+                </Text>
+                {" > "}
+                <Text size="sm" weight="bold">
+                  Adicionar um novo paciente
+                </Text>
+                . Depois, cadastre os medicamentos na aba{" "}
+                <Text size="sm" weight="bold">
+                  Medicamentos
+                </Text>
+                .
+              </>
+            }
+            style={styles.emptyPatients}
           />
         ) : (
-          <Timeline events={events} />
+          <>
+            <DoseAlertCarousel
+              doses={missedDoses}
+              onResolved={() => {
+                loadMissedDoses();
+                setReloadKey((key) => key + 1);
+              }}
+            />
+
+            <View style={styles.section}>
+              <SectionHeader title="Selecione a data" />
+
+              <DateSelector
+                dates={dates}
+                value={selectedDate}
+                onChange={setSelectedDate}
+              />
+            </View>
+
+            <SectionHeader
+              title="Histórico do paciente"
+              linkLabel="Ver todos"
+              href="/caregiver/history"
+            />
+
+            {errorMessage ? (
+              <EmptyState
+                icon="alert-circle"
+                title="Algo deu errado"
+                message={errorMessage}
+              />
+            ) : events.length === 0 && !isLoading ? (
+              <EmptyState
+                icon="calendar"
+                title="Nenhum registro neste dia"
+                message="Quando houver medicamentos ou relatos, eles aparecem aqui."
+              />
+            ) : (
+              <Timeline events={events} />
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -218,5 +253,8 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: Spacing.two,
+  },
+  emptyPatients: {
+    paddingTop: Spacing.five,
   },
 });
