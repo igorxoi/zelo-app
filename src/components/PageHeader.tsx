@@ -34,7 +34,7 @@ export function PageHeader({ title, showBackButton = true, onBack }: Props) {
         },
       ]}
     >
-      {showBackButton && (
+      {showBackButton ? (
         <Pressable
           onPress={handleBack}
           style={styles.side}
@@ -44,6 +44,8 @@ export function PageHeader({ title, showBackButton = true, onBack }: Props) {
         >
           <Feather name="chevron-left" size={24} color={colors.text} />
         </Pressable>
+      ) : (
+        <View style={styles.side} />
       )}
 
       <Text weight="semibold" style={styles.title} accessibilityRole="header">
