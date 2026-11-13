@@ -56,6 +56,7 @@ export default function CaregiverHome() {
 
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const missedDoses =
     missedState.patientId === patientId ? missedState.doses : [];
@@ -143,7 +144,10 @@ export default function CaregiverHome() {
           setErrorMessage("Não foi possível carregar o histórico.");
         }
       } finally {
-        if (isCurrent()) setIsLoadingEvents(false);
+        if (isCurrent()) {
+          setIsLoadingEvents(false);
+          setEventsLoaded(true);
+        }
       }
     },
     [patientId, hasPatient, selectedDate],
@@ -233,7 +237,7 @@ export default function CaregiverHome() {
                 title="Algo deu errado"
                 message={errorMessage}
               />
-            ) : events.length === 0 && !isLoading ? (
+            ) : events.length === 0 && eventsLoaded && !isLoading ? (
               <EmptyState
                 icon="calendar"
                 title="Nenhum registro neste dia"
@@ -246,7 +250,7 @@ export default function CaregiverHome() {
         )}
       </ScrollView>
 
-      {isLoading && <Loading fullScreen />}
+      {(isLoading || (hasPatient && !eventsLoaded)) && <Loading fullScreen />}
     </View>
   );
 }

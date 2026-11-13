@@ -60,6 +60,7 @@ export default function History() {
     null,
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const requestId = useRef(0);
@@ -91,7 +92,10 @@ export default function History() {
         setErrorMessage("Não foi possível carregar o histórico.");
       }
     } finally {
-      if (isCurrent()) setIsLoading(false);
+      if (isCurrent()) {
+        setIsLoading(false);
+        setLoaded(true);
+      }
     }
   }, [patientId, ready, selectedDate, medication]);
 
@@ -160,7 +164,7 @@ export default function History() {
                 title="Algo deu errado"
                 message={errorMessage}
               />
-            ) : events.length === 0 && !isLoading ? (
+            ) : events.length === 0 && loaded && !isLoading ? (
               <EmptyState
                 icon="calendar"
                 title="Nenhum registro neste dia"
@@ -180,7 +184,9 @@ export default function History() {
         />
       )}
 
-      {(isLoading || status === "loading") && <Loading fullScreen />}
+      {(isLoading || status === "loading" || (ready && !loaded)) && (
+        <Loading fullScreen />
+      )}
     </View>
   );
 }

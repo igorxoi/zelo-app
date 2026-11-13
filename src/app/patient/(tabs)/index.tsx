@@ -34,7 +34,7 @@ export default function PatientHome() {
   const [nickname, setNickname] = useState("");
   const [doses, setDoses] = useState<PatientDose[]>([]);
   const [takenDose, setTakenDose] = useState<TakenDose | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

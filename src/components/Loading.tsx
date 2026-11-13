@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { useLoadingContext } from "@/contexts/LoadingContext";
@@ -15,7 +15,7 @@ export function Loading({ contained = false }: Props) {
 
   const global = contained ? null : loadingContext;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!global) return;
 
     return global.register();

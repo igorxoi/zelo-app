@@ -30,6 +30,7 @@ export default function Medications() {
     null,
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const requestId = useRef(0);
@@ -52,7 +53,10 @@ export default function Medications() {
         setErrorMessage("Não foi possível carregar os medicamentos.");
       }
     } finally {
-      if (isCurrent()) setIsLoading(false);
+      if (isCurrent()) {
+        setIsLoading(false);
+        setLoaded(true);
+      }
     }
   }, [patientId, ready]);
 
@@ -88,7 +92,7 @@ export default function Medications() {
             title="Algo deu errado"
             message={errorMessage}
           />
-        ) : medications.length === 0 && !isLoading ? (
+        ) : medications.length === 0 && loaded && !isLoading ? (
           <EmptyState
             icon="inbox"
             title="Nenhum medicamento cadastrado"
@@ -124,7 +128,9 @@ export default function Medications() {
         />
       )}
 
-      {(isLoading || status === "loading") && <Loading fullScreen />}
+      {(isLoading || status === "loading" || (ready && !loaded)) && (
+        <Loading fullScreen />
+      )}
     </View>
   );
 }

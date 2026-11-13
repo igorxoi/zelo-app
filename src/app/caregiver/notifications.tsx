@@ -63,7 +63,7 @@ export default function Notifications() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const requestId = useRef(0);

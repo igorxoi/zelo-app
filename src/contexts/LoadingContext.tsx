@@ -3,7 +3,6 @@ import {
   type ReactNode,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -18,26 +17,15 @@ type LoadingState = {
 
 const LoadingContext = createContext<LoadingState | null>(null);
 
-const SHOW_DELAY_MS = 100;
-
 export function LoadingProvider({ children }: { children: ReactNode }) {
   const colors = useTheme();
   const [visible, setVisible] = useState(false);
   const count = useRef(0);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const clearTimer = () => {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = null;
-  };
 
   const register = useCallback(() => {
     count.current += 1;
 
-    if (count.current === 1) {
-      clearTimer();
-      timer.current = setTimeout(() => setVisible(true), SHOW_DELAY_MS);
-    }
+    if (count.current === 1) setVisible(true);
 
     let done = false;
 
@@ -46,14 +34,9 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
       done = true;
       count.current = Math.max(0, count.current - 1);
 
-      if (count.current === 0) {
-        clearTimer();
-        setVisible(false);
-      }
+      if (count.current === 0) setVisible(false);
     };
   }, []);
-
-  useEffect(() => clearTimer, []);
 
   const value = useMemo(() => ({ register }), [register]);
 
