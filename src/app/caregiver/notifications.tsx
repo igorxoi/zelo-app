@@ -1,4 +1,9 @@
-import { Href, useFocusEffect, useRouter } from "expo-router";
+import {
+  Href,
+  useFocusEffect,
+  useLocalSearchParams,
+  useRouter,
+} from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
@@ -11,6 +16,7 @@ import { Radius, Spacing, type ThemeColor } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 import {
   getNotifications,
+  markAllNotificationsRead,
   type AppNotification,
   type NotificationType,
 } from "@/services/notifications";
@@ -52,6 +58,7 @@ function groupByDay(notifications: AppNotification[]): Section[] {
 
 export default function Notifications() {
   const router = useRouter();
+  const { from } = useLocalSearchParams<{ from?: string }>();
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -71,6 +78,9 @@ export default function Notifications() {
     try {
       const result = await getNotifications();
       if (isCurrent()) setNotifications(result);
+      if (result.some((notification) => !notification.read)) {
+        markAllNotificationsRead().catch(() => {});
+      }
     } catch {
       if (isCurrent()) {
         setNotifications([]);
@@ -93,7 +103,11 @@ export default function Notifications() {
     <View style={styles.screen}>
       <BackHeader
         title="Notificações"
-        onBackPress={() => router.navigate("/caregiver/profile" as Href)}
+        onBackPress={() =>
+          router.navigate(
+            (from === "profile" ? "/caregiver/profile" : "/caregiver") as Href,
+          )
+        }
       />
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>

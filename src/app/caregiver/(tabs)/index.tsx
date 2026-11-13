@@ -18,6 +18,7 @@ import { usePatient } from "@/contexts/PatientContext";
 import { useTheme } from "@/hooks/useTheme";
 import { getMissedDoses, type Medication } from "@/services/doses";
 import { getHistory } from "@/services/history";
+import { getUnreadNotificationsCount } from "@/services/notifications";
 import { getPatients, type Patient } from "@/services/patients";
 
 function getLast7Days(base: Date) {
@@ -50,6 +51,8 @@ export default function CaregiverHome() {
     patientId: string;
     doses: Medication[];
   }>({ patientId: "", doses: [] });
+
+  const [hasUnread, setHasUnread] = useState(false);
 
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(false);
@@ -102,13 +105,23 @@ export default function CaregiverHome() {
     } catch {}
   }, [patientId, hasPatient]);
 
+  const loadUnread = useCallback(async () => {
+    try {
+      setHasUnread((await getUnreadNotificationsCount()) > 0);
+    } catch {}
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       loadMissedDoses();
-      const timer = setInterval(loadMissedDoses, REFRESH_MS);
+      loadUnread();
+      const timer = setInterval(() => {
+        loadMissedDoses();
+        loadUnread();
+      }, REFRESH_MS);
 
       return () => clearInterval(timer);
-    }, [loadMissedDoses]),
+    }, [loadMissedDoses, loadUnread]),
   );
 
   const loadEvents = useCallback(
@@ -149,9 +162,9 @@ export default function CaregiverHome() {
     <View style={[styles.screen, { backgroundColor: colors.primary }]}>
       <HomeHeader
         name={user?.name || ""}
-        hasNotification
+        hasNotification={hasUnread}
         onNotificationPress={() =>
-          router.push("/caregiver/notifications" as Href)
+          router.push("/caregiver/notifications?from=home" as Href)
         }
       >
         {patients.length > 0 && (
