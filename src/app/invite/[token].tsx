@@ -15,11 +15,12 @@ import {
   getInvite,
   type InvitePreview,
 } from "@/services/patients";
-import { clearPendingInvite, savePendingInvite } from "@/utils/invite";
+import { normalizeInviteCode } from "@/utils/invite";
 
 export default function AcceptInvite() {
   const router = useRouter();
   const { token } = useLocalSearchParams<{ token: string }>();
+  const code = normalizeInviteCode(token ?? "");
   const { user, loading: authLoading } = useAuth();
   const { showSnackbar } = useSnackbar();
 
@@ -28,19 +29,18 @@ export default function AcceptInvite() {
   const insets = useSafeAreaInsets();
 
   const [invite, setInvite] = useState<InvitePreview | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(code.length > 0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!token) return;
+    if (!code) return;
     let active = true;
 
-    getInvite(token)
+    getInvite(code)
       .then((result) => active && setInvite(result))
       .catch((error) => {
         if (!active) return;
-        clearPendingInvite();
         setErrorMessage(
           error instanceof Error
             ? error.message
@@ -52,7 +52,7 @@ export default function AcceptInvite() {
     return () => {
       active = false;
     };
-  }, [token]);
+  }, [code]);
 
   const goHome = useCallback(() => {
     router.replace(
@@ -60,19 +60,17 @@ export default function AcceptInvite() {
     );
   }, [router, user]);
 
-  const goToLogin = async (path: "/" | "/register") => {
-    if (token) await savePendingInvite(token);
+  const goToLogin = (path: "/" | "/register") => {
     router.replace(path as Href);
   };
 
   const handleAccept = async () => {
-    if (!token || isSubmitting) return;
+    if (!code || isSubmitting) return;
 
     setIsSubmitting(true);
 
     try {
-      const patient = await acceptInvite(token);
-      await clearPendingInvite();
+      const patient = await acceptInvite(code);
 
       showSnackbar({
         variant: "success",
@@ -105,7 +103,7 @@ export default function AcceptInvite() {
           </Text>
           <Text size="sm" color="textSecondary">
             {errorMessage ??
-              "Este convite expirou ou foi cancelado. Peça um novo link ao cuidador master."}
+              "Este convite expirou ou foi cancelado. Peça um novo código ao cuidador master."}
           </Text>
         </View>
       );
@@ -140,7 +138,8 @@ export default function AcceptInvite() {
       return (
         <>
           <Text size="xs" color="textSecondary" style={styles.hint}>
-            Entre ou crie uma conta com o e-mail {invite?.email} para aceitar.
+            Entre ou crie uma conta com o e-mail {invite?.email}. Depois, use
+            Perfil &gt; Tenho um convite e digite o código.
           </Text>
           <Button
             label="Entrar"

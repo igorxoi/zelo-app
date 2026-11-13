@@ -41,7 +41,7 @@ export function CancelInviteSheet({
       showSnackbar({
         variant: "success",
         title: "Convite cancelado",
-        message: `O link enviado para ${caregiver.name} não funciona mais.`,
+        message: `O código enviado para ${caregiver.name} não funciona mais.`,
       });
       onCancelled();
     } catch {
@@ -62,7 +62,7 @@ export function CancelInviteSheet({
       onClose={handleClose}
       loading={isSubmitting}
       title="Cancelar este convite?"
-      subtitle={`O link enviado para ${caregiver.name} deixará de funcionar. Se mudar de ideia, você pode gerar um novo convite depois.`}
+      subtitle={`O código enviado para ${caregiver.name} deixará de funcionar. Se mudar de ideia, você pode gerar um novo convite depois.`}
     >
       <View style={styles.actions}>
         <Pressable

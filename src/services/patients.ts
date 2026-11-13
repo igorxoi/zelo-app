@@ -51,7 +51,7 @@ export type InviteCaregiverPayload = {
 
 export type CaregiverInvite = {
   caregiver: Caregiver;
-  link: string;
+  code: string;
 };
 
 export type InvitePreview = {
@@ -140,19 +140,13 @@ export function cancelCaregiverInvite(
   return request("DELETE", `/patients/${patientId}/invites/${caregiverId}`);
 }
 
-export function getInvite(token: string): Promise<InvitePreview> {
-  return request<InvitePreview>(
-    "GET",
-    `/invites/${encodeURIComponent(token)}`,
-    {
-      auth: false,
-    },
-  );
+export function getInvite(code: string): Promise<InvitePreview> {
+  return request<InvitePreview>("GET", `/invites/${encodeURIComponent(code)}`);
 }
 
-export function acceptInvite(token: string): Promise<Patient> {
+export function acceptInvite(code: string): Promise<Patient> {
   return request<Patient>(
     "POST",
-    `/invites/${encodeURIComponent(token)}/accept`,
+    `/invites/${encodeURIComponent(code)}/accept`,
   );
 }

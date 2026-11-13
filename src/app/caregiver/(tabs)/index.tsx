@@ -189,6 +189,14 @@ export default function CaregiverHome() {
                 <Text size="sm" weight="bold">
                   Medicamentos
                 </Text>
+                . Se você recebeu um convite, use{" "}
+                <Text size="sm" weight="bold">
+                  Perfil
+                </Text>
+                {" > "}
+                <Text size="sm" weight="bold">
+                  Tenho um convite
+                </Text>
                 .
               </>
             }

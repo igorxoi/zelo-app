@@ -15,7 +15,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSnackbar } from "@/contexts/SnackbarContext";
 import { useTheme } from "@/hooks/useTheme";
 import { registerCaregiver } from "@/services/auth";
-import { takePendingInvite } from "@/utils/invite";
 import {
   isCompleteCpf,
   isValidEmail,
@@ -81,11 +80,7 @@ export default function Register() {
 
       await signIn(user);
 
-      const pendingInvite = await takePendingInvite();
-
-      router.replace(
-        (pendingInvite ? `/invite/${pendingInvite}` : "/caregiver") as Href,
-      );
+      router.replace("/caregiver" as Href);
     } catch (error) {
       showSnackbar({
         variant: "error",
