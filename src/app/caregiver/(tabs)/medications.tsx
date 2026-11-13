@@ -8,8 +8,10 @@ import { EmptyState } from "@/components/EmptyState";
 import { EndMedicationSheet } from "@/components/EndMedicationSheet";
 import { Loading } from "@/components/Loading";
 import { MedicationCard } from "@/components/MedicationCard";
+import { NoPatientState } from "@/components/NoPatientState";
 import { Spacing, type ThemeColor } from "@/constants/theme";
 import { usePatient } from "@/contexts/PatientContext";
+import { usePatientStatus } from "@/hooks/usePatientStatus";
 import { useTheme } from "@/hooks/useTheme";
 import { getMedications, type Medication } from "@/services/medications";
 
@@ -18,6 +20,7 @@ const FAB_SIZE = 56;
 export default function Medications() {
   const router = useRouter();
   const { patientId } = usePatient();
+  const { status, ready } = usePatientStatus();
 
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -32,7 +35,7 @@ export default function Medications() {
   const requestId = useRef(0);
 
   const loadMedications = useCallback(async () => {
-    if (!patientId) return;
+    if (!patientId || !ready) return;
 
     const currentRequest = ++requestId.current;
     const isCurrent = () => currentRequest === requestId.current;
@@ -51,7 +54,7 @@ export default function Medications() {
     } finally {
       if (isCurrent()) setIsLoading(false);
     }
-  }, [patientId]);
+  }, [patientId, ready]);
 
   useFocusEffect(
     useCallback(() => {
@@ -71,7 +74,15 @@ export default function Medications() {
       />
 
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        {errorMessage ? (
+        {status === "loading" ? null : status === "none" ? (
+          <NoPatientState lead="Para cadastrar medicamentos, primeiro adicione um paciente em" />
+        ) : status === "error" ? (
+          <EmptyState
+            icon="alert-circle"
+            title="Algo deu errado"
+            message="Não foi possível carregar os pacientes."
+          />
+        ) : errorMessage ? (
           <EmptyState
             icon="alert-circle"
             title="Algo deu errado"
@@ -94,14 +105,16 @@ export default function Medications() {
         )}
       </ScrollView>
 
-      <Pressable
-        onPress={handleAddPress}
-        accessibilityRole="button"
-        accessibilityLabel="Cadastrar medicamento"
-        style={({ pressed }) => [styles.fab, pressed && styles.pressed]}
-      >
-        <Feather name="plus" size={28} color={colors.onPrimary} />
-      </Pressable>
+      {ready && (
+        <Pressable
+          onPress={handleAddPress}
+          accessibilityRole="button"
+          accessibilityLabel="Cadastrar medicamento"
+          style={({ pressed }) => [styles.fab, pressed && styles.pressed]}
+        >
+          <Feather name="plus" size={28} color={colors.onPrimary} />
+        </Pressable>
+      )}
 
       {medicationToEnd && (
         <EndMedicationSheet
@@ -111,7 +124,7 @@ export default function Medications() {
         />
       )}
 
-      {isLoading && <Loading fullScreen />}
+      {(isLoading || status === "loading") && <Loading fullScreen />}
     </View>
   );
 }

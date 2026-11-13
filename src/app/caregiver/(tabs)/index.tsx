@@ -9,6 +9,7 @@ import { HomeHeader } from "@/components/HomeHeader";
 import { Loading } from "@/components/Loading";
 import { PatientSelect } from "@/components/PatientSelect";
 import { SectionHeader } from "@/components/SectionHeader";
+import { NoPatientState } from "@/components/NoPatientState";
 import { Text } from "@/components/Text";
 import { Timeline, TimelineEvent } from "@/components/Timeline";
 import { Spacing } from "@/constants/theme";
@@ -167,19 +168,10 @@ export default function CaregiverHome() {
         contentContainerStyle={styles.content}
       >
         {hasNoPatients ? (
-          <EmptyState
-            icon="user-plus"
-            title="Nenhum paciente cadastrado"
-            message={
+          <NoPatientState
+            lead="Para começar, vá em"
+            trail={
               <>
-                Para começar, vá em{" "}
-                <Text size="sm" weight="bold">
-                  Perfil
-                </Text>
-                {" > "}
-                <Text size="sm" weight="bold">
-                  Adicionar um novo paciente
-                </Text>
                 . Depois, cadastre os medicamentos na aba{" "}
                 <Text size="sm" weight="bold">
                   Medicamentos
@@ -187,7 +179,6 @@ export default function CaregiverHome() {
                 .
               </>
             }
-            style={styles.emptyPatients}
           />
         ) : (
           <>
@@ -253,8 +244,5 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: Spacing.two,
-  },
-  emptyPatients: {
-    paddingTop: Spacing.five,
   },
 });
