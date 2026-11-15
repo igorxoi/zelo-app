@@ -22,8 +22,8 @@ const tags = [
   '<meta name="apple-mobile-web-app-capable" content="yes" />',
   '<meta name="mobile-web-app-capable" content="yes" />',
   '<meta name="apple-mobile-web-app-title" content="Zelo" />',
-  '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />',
-  "<style>html,body{background-color:#FFFFFF;overscroll-behavior:none}</style>",
+  '<meta name="apple-mobile-web-app-status-bar-style" content="default" />',
+  "<style>html,body{background-color:#FFFFFF;overscroll-behavior:none}html,body{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;overflow:hidden}#root{height:100%}</style>",
 ].join("\n    ");
 
 if (!/<title>/i.test(html)) {
