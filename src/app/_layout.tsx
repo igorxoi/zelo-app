@@ -6,6 +6,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import { SnackbarProvider } from "@/contexts/SnackbarContext";
 import { useTheme } from "@/hooks/useTheme";
+import "@/utils/webViewport";
 import {
   Poppins_400Regular,
   Poppins_500Medium,

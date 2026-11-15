@@ -5,7 +5,7 @@ let html = readFileSync(file, "utf8");
 
 html = html.replace(
   /<meta name="viewport"[^>]*>/i,
-  '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />',
+  '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover, maximum-scale=1, user-scalable=no" />',
 );
 
 if (html.includes('rel="manifest"')) {
@@ -23,7 +23,7 @@ const tags = [
   '<meta name="mobile-web-app-capable" content="yes" />',
   '<meta name="apple-mobile-web-app-title" content="Zelo" />',
   '<meta name="apple-mobile-web-app-status-bar-style" content="default" />',
-  "<style>html,body{background-color:#FFFFFF;overscroll-behavior:none}html,body{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;overflow:hidden}#root{height:100%}</style>",
+  "<style>html,body{background-color:#FFFFFF;overscroll-behavior:none}html,body{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;overflow:hidden}#root{height:100%}input,textarea,select{font-size:16px !important}</style>",
 ].join("\n    ");
 
 if (!/<title>/i.test(html)) {
