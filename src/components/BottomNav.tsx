@@ -54,9 +54,7 @@ export function BottomNav({ state, descriptors }: BottomTabBarProps) {
         styles.container,
         {
           backgroundColor: colors.background,
-          paddingBottom:
-            PADDING +
-            (Platform.OS === "web" ? Math.round(insets.bottom * 0.3) : insets.bottom),
+          paddingBottom: Platform.OS === "web" ? PADDING : PADDING + insets.bottom,
         },
       ]}
     >
