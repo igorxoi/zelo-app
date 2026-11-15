@@ -3,6 +3,7 @@ import { ReactNode } from "react";
 import {
   Image,
   ImageSourcePropType,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -38,7 +39,17 @@ export function HomeHeader({
   const insets = useInsets();
 
   return (
-    <View
+    <>
+      {Platform.OS === "web" && insets.top > 0 && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.statusBackdrop,
+            { height: insets.top, backgroundColor: colors.primary },
+          ]}
+        />
+      )}
+      <View
       style={[
         styles.container,
         {
@@ -82,12 +93,20 @@ export function HomeHeader({
 
       {children}
     </View>
+    </>
   );
 }
 
 const AVATAR_SIZE = 48;
 
 const styles = StyleSheet.create({
+  statusBackdrop: {
+    position: "fixed" as "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 50,
+  },
   container: {
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.three,

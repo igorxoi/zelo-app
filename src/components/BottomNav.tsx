@@ -1,6 +1,6 @@
 import { Href, Tabs, useRouter, useSegments } from "expo-router";
 import type { ComponentProps } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import { useInsets } from "@/hooks/useInsets";
 
 import { ICON_SIZE, Icons, type IconName } from "@/constants/icons";
@@ -54,7 +54,9 @@ export function BottomNav({ state, descriptors }: BottomTabBarProps) {
         styles.container,
         {
           backgroundColor: colors.background,
-          paddingBottom: PADDING + insets.bottom,
+          paddingBottom:
+            PADDING +
+            (Platform.OS === "web" ? Math.round(insets.bottom * 0.3) : insets.bottom),
         },
       ]}
     >
