@@ -1,7 +1,7 @@
 import { Href, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/hooks/useInsets";
 
 import { BackHeader } from "@/components/BackHeader";
 import { Loading } from "@/components/Loading";
@@ -26,7 +26,7 @@ export default function AcceptInvite() {
 
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
 
   const [invite, setInvite] = useState<InvitePreview | null>(null);
   const [isLoading, setIsLoading] = useState(code.length > 0);

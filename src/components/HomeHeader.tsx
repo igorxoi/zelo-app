@@ -7,7 +7,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/hooks/useInsets";
 
 import { Text } from "@/components/Text";
 import { Spacing } from "@/constants/theme";
@@ -35,7 +35,7 @@ export function HomeHeader({
   children,
 }: Props) {
   const colors = useTheme();
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
 
   return (
     <View

@@ -1,7 +1,7 @@
 import { Href, Tabs, useRouter, useSegments } from "expo-router";
 import type { ComponentProps } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/hooks/useInsets";
 
 import { ICON_SIZE, Icons, type IconName } from "@/constants/icons";
 import { Radius, Spacing } from "@/constants/theme";
@@ -26,7 +26,7 @@ type BottomTabBarProps = Parameters<
 
 export function BottomNav({ state, descriptors }: BottomTabBarProps) {
   const colors = useTheme();
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
   const router = useRouter();
   const segments = useSegments();
 

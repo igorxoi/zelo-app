@@ -3,7 +3,13 @@ import { readFileSync, writeFileSync } from "node:fs";
 const file = "dist/index.html";
 let html = readFileSync(file, "utf8");
 
+html = html.replace(
+  /<meta name="viewport"[^>]*>/i,
+  '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />',
+);
+
 if (html.includes('rel="manifest"')) {
+  writeFileSync(file, html);
   console.log("index.html já tem as tags do PWA");
   process.exit(0);
 }
@@ -19,11 +25,6 @@ const tags = [
   '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />',
   "<style>html,body{background-color:#FFFFFF;overscroll-behavior:none}</style>",
 ].join("\n    ");
-
-html = html.replace(
-  /<meta name="viewport"[^>]*>/i,
-  '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />',
-);
 
 if (!/<title>/i.test(html)) {
   html = html.replace("</head>", "    <title>Zelo</title>\n  </head>");

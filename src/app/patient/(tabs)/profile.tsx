@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/hooks/useInsets";
 
 import { Avatar, getInitials } from "@/components/Avatar";
 import { BackHeader } from "@/components/BackHeader";
@@ -27,7 +27,7 @@ export default function PatientProfileScreen() {
 
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
 
   const [profile, setProfile] = useState<PatientProfile | null>(null);
   const [isSignOutOpen, setIsSignOutOpen] = useState(false);
