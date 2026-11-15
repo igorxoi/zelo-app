@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -13,6 +14,7 @@ import {
   setAuthToken,
   setUnauthorizedHandler,
 } from "@/services/api";
+import { forgetPushDevice, syncPushDevice } from "@/services/push";
 
 const STORAGE_KEY = "zelo:session";
 
@@ -43,6 +45,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const signingOut = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -52,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const session = JSON.parse(saved) as { user: User; token: string };
           setAuthToken(session.token);
           setUser(session.user);
+          syncPushDevice(session.user.profile);
         }
       } catch {
       } finally {
@@ -66,13 +70,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       JSON.stringify({ user: next, token: getAuthToken() }),
     );
     setUser(next);
+    syncPushDevice(next.profile);
   };
 
   const signOut = useCallback(async () => {
-    setAuthToken(null);
-    await AsyncStorage.removeItem(STORAGE_KEY);
-    setUser(null);
-  }, []);
+    if (signingOut.current) return;
+    signingOut.current = true;
+
+    try {
+      if (user) await forgetPushDevice(user.profile);
+      setAuthToken(null);
+      await AsyncStorage.removeItem(STORAGE_KEY);
+      setUser(null);
+    } finally {
+      signingOut.current = false;
+    }
+  }, [user]);
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
