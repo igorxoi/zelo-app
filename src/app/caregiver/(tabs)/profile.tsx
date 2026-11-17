@@ -1,7 +1,13 @@
 import { Feather } from "@expo/vector-icons";
 import { Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
 
 import { Avatar, getInitials } from "@/components/Avatar";
 import { BackHeader } from "@/components/BackHeader";
@@ -16,7 +22,9 @@ import { SupportSheet } from "@/components/SupportSheet";
 import { Text } from "@/components/Text";
 import { Radius, Spacing, type ThemeColor } from "@/constants/theme";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSnackbar } from "@/contexts/SnackbarContext";
 import { usePatient } from "@/contexts/PatientContext";
+import { usePush } from "@/hooks/usePush";
 import { useTheme } from "@/hooks/useTheme";
 import {
   getPatient,
@@ -25,6 +33,7 @@ import {
   type PatientDetails,
 } from "@/services/patients";
 import { getUserProfile, type UserProfile } from "@/services/profile";
+import { PUSH_HINTS } from "@/services/push";
 
 type Sheet = "support" | "signOut" | null;
 
@@ -36,6 +45,8 @@ export default function Profile() {
   const router = useRouter();
   const { signOut } = useAuth();
   const { patientId, setPatientId } = usePatient();
+  const { showSnackbar } = useSnackbar();
+  const push = usePush("caregiver");
 
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -112,6 +123,45 @@ export default function Profile() {
   const handlePatientRemoved = () => {
     if (patientToRemove?.id === patientId) setPatientId("");
     loadProfile();
+  };
+
+  const handlePush = async () => {
+    if (push.busy) return;
+
+    if (push.status === "unsupported" || push.status === "needs-install") {
+      showSnackbar({ variant: "error", ...PUSH_HINTS[push.status] });
+      return;
+    }
+
+    if (push.status === "blocked") {
+      showSnackbar({ variant: "error", ...PUSH_HINTS.blocked });
+      return;
+    }
+
+    try {
+      if (push.status === "on") {
+        await push.disable();
+        showSnackbar({
+          variant: "success",
+          title: "Avisos desativados",
+          message: "Você não vai mais receber avisos neste celular.",
+        });
+      } else {
+        await push.enable();
+        showSnackbar({
+          variant: "success",
+          title: "Avisos ativados",
+          message:
+            "Você será avisado na hora de cada remédio e quando uma dose não for tomada.",
+        });
+      }
+    } catch (error) {
+      showSnackbar({
+        variant: "error",
+        title: "Não foi possível alterar os avisos",
+        message: error instanceof Error ? error.message : "Tente novamente.",
+      });
+    }
   };
 
   const handleSignOut = async () => {
@@ -256,6 +306,14 @@ export default function Profile() {
                       )
                     }
                   />
+                  {Platform.OS === "web" && (
+                    <ProfileMenuItem
+                      icon="smartphone"
+                      label="Avisos no celular"
+                      badge={push.status === "on" ? "Ativados" : undefined}
+                      onPress={handlePush}
+                    />
+                  )}
                   <ProfileMenuItem
                     icon="user-plus"
                     label="Tenho um convite"

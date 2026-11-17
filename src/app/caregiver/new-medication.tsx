@@ -1,7 +1,7 @@
 import { Href, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/hooks/useInsets";
 
 import { BackHeader } from "@/components/BackHeader";
 import { Checkbox } from "@/components/Checkbox";
@@ -51,7 +51,7 @@ export default function NewMedication() {
 
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
 
   const [name, setName] = useState("");
   const [dosage, setDosage] = useState("");

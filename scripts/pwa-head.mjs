@@ -3,7 +3,13 @@ import { readFileSync, writeFileSync } from "node:fs";
 const file = "dist/index.html";
 let html = readFileSync(file, "utf8");
 
+html = html.replace(
+  /<meta name="viewport"[^>]*>/i,
+  '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover, maximum-scale=1, user-scalable=no" />',
+);
+
 if (html.includes('rel="manifest"')) {
+  writeFileSync(file, html);
   console.log("index.html já tem as tags do PWA");
   process.exit(0);
 }
@@ -16,14 +22,9 @@ const tags = [
   '<meta name="apple-mobile-web-app-capable" content="yes" />',
   '<meta name="mobile-web-app-capable" content="yes" />',
   '<meta name="apple-mobile-web-app-title" content="Zelo" />',
-  '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />',
-  "<style>html,body{background-color:#FFFFFF;overscroll-behavior:none}</style>",
+  '<meta name="apple-mobile-web-app-status-bar-style" content="default" />',
+  "<style>html,body{background-color:#FFFFFF;overscroll-behavior:none}html,body{position:fixed;top:0;right:0;bottom:0;left:0;width:100%;height:100%;overflow:hidden}#root{height:100%}input,textarea,select{font-size:16px !important}</style>",
 ].join("\n    ");
-
-html = html.replace(
-  /<meta name="viewport"[^>]*>/i,
-  '<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover" />',
-);
 
 if (!/<title>/i.test(html)) {
   html = html.replace("</head>", "    <title>Zelo</title>\n  </head>");

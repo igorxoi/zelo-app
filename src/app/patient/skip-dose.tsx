@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { Href, useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/hooks/useInsets";
 
 import { Loading } from "@/components/Loading";
 import { Text } from "@/components/Text";
@@ -28,7 +28,7 @@ export default function SkipDose() {
 
   const colors = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 

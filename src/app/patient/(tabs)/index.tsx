@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { HomeHeader } from "@/components/HomeHeader";
 import { Loading } from "@/components/Loading";
 import { PatientDoseCard } from "@/components/PatientDoseCard";
+import { PushPrompt } from "@/components/PushPrompt";
 import { SymptomDiary } from "@/components/SymptomDiary";
 import { Text } from "@/components/Text";
 import { Radius, Spacing, type ThemeColor } from "@/constants/theme";
@@ -150,6 +151,8 @@ export default function PatientHome() {
         style={[styles.sheet, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.content}
       >
+        <PushPrompt profile="patient" />
+
         {takenDose && (
           <View style={styles.banner} accessibilityRole="alert">
             <Feather

@@ -1,7 +1,7 @@
 import { Href, Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useInsets } from "@/hooks/useInsets";
 
 import { CodeInput } from "@/components/CodeInput";
 import { Input } from "@/components/Input";
@@ -19,6 +19,7 @@ const PROFILE_OPTIONS = [
 
 export default function LoginScreen() {
   const router = useRouter();
+  const insets = useInsets();
   const { user, loading, signIn } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -88,7 +89,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={styles.header}>
         <Image source={require("@/assets/logo.png")} style={styles.logo} />
         <Text size="xl" weight="semibold">
@@ -176,7 +177,7 @@ export default function LoginScreen() {
       </Text>
 
       {isSubmitting && <Loading fullScreen />}
-    </SafeAreaView>
+    </View>
   );
 }
 

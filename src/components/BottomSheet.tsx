@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useInsets } from "@/hooks/useInsets";
 
 import { Loading } from "@/components/Loading";
 import { Text } from "@/components/Text";
@@ -26,7 +26,7 @@ export function BottomSheet({
   children,
 }: Props) {
   const colors = useTheme();
-  const insets = useSafeAreaInsets();
+  const insets = useInsets();
 
   return (
     <Modal
